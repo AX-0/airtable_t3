@@ -1,5 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import { index, pgTableCreator, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, varchar, uuid, text, integer, pgEnum, index, pgTableCreator, primaryKey } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "next-auth/adapters";
 
 /**
@@ -106,3 +106,36 @@ export const verificationTokens = createTable(
   }),
   (t) => [primaryKey({ columns: [t.identifier, t.token] })],
 );
+
+export const columnTypeEnum = pgEnum('ColumnType', ['TEXT', 'NUMBER']);
+
+export const bases = pgTable('bases', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 255 }),
+  ownerId: uuid('owner_id').references(() => users.id),
+});
+
+export const tables = pgTable('tables', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 255 }),
+  baseId: uuid('base_id').references(() => bases.id),
+});
+
+export const columns = pgTable('columns', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 255 }),
+  type: columnTypeEnum('type'),
+  tableId: uuid('table_id').references(() => tables.id),
+});
+
+export const rows = pgTable('rows', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tableId: uuid('table_id').references(() => tables.id),
+});
+
+export const cells = pgTable('cells', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  rowId: uuid('row_id').references(() => rows.id),
+  columnId: uuid('column_id').references(() => columns.id),
+  value: text('value'),
+});
