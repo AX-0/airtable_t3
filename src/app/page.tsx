@@ -1,6 +1,11 @@
-import Link from "next/link";
+// import Link from "next/link";
 import { redirect } from "next/navigation";
 import { NotepadText } from "lucide-react";
+
+import { appRouter } from "~/server/api/root";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { db } from "~/server/db";
+import SuperJSON from "superjson";
 
 // import { LatestPost } from "~/app/_components/post";
 import { auth } from "~/server/auth";
@@ -10,18 +15,28 @@ import HomeNavbar from "./_components/HomeNavbar";
 import CreateBaseFallback from "./_components/CreateBaseFallback";
 
 export default async function Home() {
-  const hello = await api.post.hello({ text: "from tRPC" });
+  // const hello = await api.post.hello({ text: "from tRPC" });
   const session = await auth();
 
   if (!session) {
     redirect("/login");
   }
 
-  const bases = await api.base.getBases();
+  const helpers = createServerSideHelpers({
+    router: appRouter,
+    ctx: {
+      session,
+      db,
+      headers: new Headers(),
+    },
+    transformer: SuperJSON,
+  });
+  
+  const bases = await helpers.base.getBases.fetch();
 
-  if (session?.user) {
-    void api.post.getLatest.prefetch();
-  }
+  // if (session?.user) {
+  //   void api.post.getLatest.prefetch();
+  // }
 
   return (
     <HydrateClient>
