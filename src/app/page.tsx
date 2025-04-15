@@ -44,11 +44,11 @@ export default async function Home() {
       <main className="min-h-screen bg-[#f9fafb] p-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Home</h1>
 
-        {(await bases).length === 0 ? (
+        {bases.length === 0 ? (
           <CreateBaseFallback />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {(await bases).map((base) => (
+            {bases.map((base) => (
               <div
                 key={base.id}
                 className="flex justify-between items-center rounded-xl bg-white shadow-sm hover:shadow-md transition p-4 cursor-pointer"
