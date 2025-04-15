@@ -1,12 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { NotepadText } from "lucide-react";
 
-import { LatestPost } from "~/app/_components/post";
+// import { LatestPost } from "~/app/_components/post";
 import { auth } from "~/server/auth";
 import { api, HydrateClient } from "~/trpc/server";
 
+import HomeNavbar from "./_components/HomeNavbar";
+import CreateBaseFallback from "./_components/CreateBaseFallback";
+
 export default async function Home() {
   const hello = await api.post.hello({ text: "from tRPC" });
+  const bases = api.base.getBases();
   const session = await auth();
 
   if (!session) {
@@ -19,28 +24,32 @@ export default async function Home() {
 
   return (
     <HydrateClient>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-[#f9fafb] text-white">
-        <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-2xl text-black">
-              {hello ? hello.greeting : "Loading tRPC query..."}
-            </p>
+      <HomeNavbar />
+      <main className="min-h-screen bg-[#f9fafb] p-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Home</h1>
 
-            <div className="flex flex-col items-center justify-center gap-4">
-              <p className="text-center text-2xl text-black">
-                <span>Logged in as {session.user?.name}</span>
-              </p>
-              <Link
-                href="/api/auth/signout"
-                className="rounded-full bg-black/10 px-10 py-3 font-semibold no-underline transition hover:bg-black/20 text-black"
+        {(await bases).length === 0 ? (
+          <CreateBaseFallback />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {(await bases).map((base) => (
+              <div
+                key={base.id}
+                className="flex justify-between items-center rounded-xl bg-white shadow-sm hover:shadow-md transition p-4 cursor-pointer"
               >
-                Sign out
-              </Link>
-            </div>
-          </div>
+                {/* Icon */}
+                <div className="w-12 h-12 rounded-lg bg-purple-700 flex items-center justify-center text-white">
+                  <NotepadText />
+                </div>
 
-          <LatestPost />
-        </div>
+                {/* Name */}
+                <div className="flex-1 ml-4">
+                  <h2 className="text-lg font-semibold text-gray-800">{base.name}</h2>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
     </HydrateClient>
   );

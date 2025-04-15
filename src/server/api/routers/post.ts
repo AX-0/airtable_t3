@@ -5,7 +5,8 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { posts } from "~/server/db/schema";
+import { posts, bases } from "~/server/db/schema";
+import { eq } from "drizzle-orm";
 
 export const postRouter = createTRPCRouter({
   hello: publicProcedure
@@ -35,5 +36,17 @@ export const postRouter = createTRPCRouter({
 
   getSecretMessage: protectedProcedure.query(() => {
     return "you can now see this secret message!";
+  }),
+});
+
+export const baseRouter = createTRPCRouter({
+  getBases: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+    const allBases = await ctx.db
+      .select()
+      .from(bases)
+      .where(eq(bases.ownerId, userId));
+
+    return allBases;
   }),
 });

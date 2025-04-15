@@ -112,7 +112,7 @@ export const columnTypeEnum = pgEnum('ColumnType', ['TEXT', 'NUMBER']);
 export const bases = pgTable('bases', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }),
-  ownerId: uuid('owner_id').references(() => users.id),
+  ownerId: varchar('owner_id').references(() => users.id),
 });
 
 export const tables = pgTable('tables', {
