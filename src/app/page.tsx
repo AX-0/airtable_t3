@@ -11,12 +11,13 @@ import CreateBaseFallback from "./_components/CreateBaseFallback";
 
 export default async function Home() {
   const hello = await api.post.hello({ text: "from tRPC" });
-  const bases = api.base.getBases();
   const session = await auth();
 
   if (!session) {
     redirect("/login");
   }
+
+  const bases = await api.base.getBases();
 
   if (session?.user) {
     void api.post.getLatest.prefetch();
