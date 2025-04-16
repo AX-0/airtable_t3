@@ -10,26 +10,26 @@ import { type AdapterAccount } from "next-auth/adapters";
  */
 export const createTable = pgTableCreator((name) => `airtable_t3_${name}`);
 
-export const posts = createTable(
-  "post",
-  (d) => ({
-    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    name: d.varchar({ length: 256 }),
-    createdById: d
-      .varchar({ length: 255 })
-      .notNull()
-      .references(() => users.id),
-    createdAt: d
-      .timestamp({ withTimezone: true })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
-  }),
-  (t) => [
-    index("created_by_idx").on(t.createdById),
-    index("name_idx").on(t.name),
-  ],
-);
+// export const posts = createTable(
+//   "post",
+//   (d) => ({
+//     id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+//     name: d.varchar({ length: 256 }),
+//     createdById: d
+//       .varchar({ length: 255 })
+//       .notNull()
+//       .references(() => users.id),
+//     createdAt: d
+//       .timestamp({ withTimezone: true })
+//       .default(sql`CURRENT_TIMESTAMP`)
+//       .notNull(),
+//     updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+//   }),
+//   (t) => [
+//     index("created_by_idx").on(t.createdById),
+//     index("name_idx").on(t.name),
+//   ],
+// );
 
 export const users = createTable("user", (d) => ({
   id: d
@@ -109,33 +109,104 @@ export const verificationTokens = createTable(
 
 export const columnTypeEnum = pgEnum('ColumnType', ['TEXT', 'NUMBER']);
 
-export const bases = pgTable('bases', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: varchar('name', { length: 255 }),
-  ownerId: varchar('owner_id').references(() => users.id),
-});
+export const bases = createTable(
+  "bases",
+  (d) => ({
+    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+    name: d.varchar({ length: 256 }),
+    ownerId: d
+      .varchar({ length: 255 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: d
+      .timestamp({ withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+  }),
+  // (t) => [
+  //   index("owner_idx").on(t.ownerId),
+  //   index("name_base").on(t.name),
+  // ],
+);
 
-export const tables = pgTable('tables', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: varchar('name', { length: 255 }),
-  baseId: uuid('base_id').references(() => bases.id),
-});
+export const tables = createTable(
+  "tables",
+  (d) => ({
+    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+    name: d.varchar({ length: 256 }),
+    baseId: d
+      .integer()
+      .notNull()
+      .references(() => bases.id),
+    updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+  }),
+);
 
-export const columns = pgTable('columns', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: varchar('name', { length: 255 }),
-  type: columnTypeEnum('type'),
-  tableId: uuid('table_id').references(() => tables.id),
-});
+// export const tables = createTable('tables', {
+//   id: uuid('id').primaryKey().defaultRandom(),
+//   name: varchar('name', { length: 255 }),
+//   baseId: uuid('base_id').references(() => bases.id),
+// });
 
-export const rows = pgTable('rows', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  tableId: uuid('table_id').references(() => tables.id),
-});
+export const columns = createTable(
+  "columns",
+  (d) => ({
+    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+    name: d.varchar({ length: 256 }),
+    tableId: d
+      .integer()
+      .notNull()
+      .references(() => tables.id),
+    // updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+  }),
+);
 
-export const cells = pgTable('cells', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  rowId: uuid('row_id').references(() => rows.id),
-  columnId: uuid('column_id').references(() => columns.id),
-  value: text('value'),
-});
+// export const columns = createTable('columns', {
+//   id: uuid('id').primaryKey().defaultRandom(),
+//   name: varchar('name', { length: 255 }),
+//   type: columnTypeEnum('type'),
+//   tableId: uuid('table_id').references(() => tables.id),
+// });
+
+export const rows = createTable(
+  "rows",
+  (d) => ({
+    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+    name: d.varchar({ length: 256 }),
+    tableId: d
+      .integer()
+      .notNull()
+      .references(() => tables.id),
+    // updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+  }),
+);
+
+// export const rows = createTable('rows', {
+//   id: uuid('id').primaryKey().defaultRandom(),
+//   tableId: uuid('table_id').references(() => tables.id),
+// });
+
+export const cells = createTable(
+  "cells",
+  (d) => ({
+    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+    value: text('value'),
+    rowId: d
+      .integer()
+      .notNull()
+      .references(() => rows.id),
+    columnId: d
+      .integer()
+      .notNull()
+      .references(() => columns.id),
+    // updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+  }),
+);
+
+// export const cells = createTable('cells', {
+//   id: uuid('id').primaryKey().defaultRandom(),
+//   rowId: uuid('row_id').references(() => rows.id),
+//   columnId: uuid('column_id').references(() => columns.id),
+//   value: text('value'),
+// });
