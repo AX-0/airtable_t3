@@ -13,6 +13,7 @@ import { api, HydrateClient } from "~/trpc/server";
 
 import HomeNavbar from "./_components/HomeNavbar";
 import CreateBaseFallback from "./_components/CreateBaseFallback";
+import CreateBaseTrigger from "./_components/CreateBaseTrigger";
 
 export default async function Home() {
   // const hello = await api.post.hello({ text: "from tRPC" });
@@ -60,10 +61,14 @@ export default async function Home() {
 
                 {/* Name */}
                 <div className="flex-1 ml-4">
-                  <h2 className="text-lg font-semibold text-gray-800">{base.name}</h2>
+                  <h2 className="text-lg font-semibold text-black">{base.name}</h2>
                 </div>
               </div>
             ))}
+
+            {/* <div className="flex justify-between items-center rounded-xl bg-white shadow-sm hover:shadow-md transition p-4 cursor-pointer"> */}
+            <CreateBaseTrigger />
+            {/* </div> */}
           </div>
         )}
       </main>
