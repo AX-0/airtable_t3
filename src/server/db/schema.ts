@@ -191,7 +191,7 @@ export const cells = createTable(
   "cells",
   (d) => ({
     id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    value: text('value'),
+    value: text('value').notNull(),
     rowId: d
       .integer()
       .notNull()
@@ -210,3 +210,16 @@ export const cells = createTable(
 //   columnId: uuid('column_id').references(() => columns.id),
 //   value: text('value'),
 // });
+
+export const views = createTable(
+  "views",
+  (d) => ({
+    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+    name: d.varchar({ length: 256 }),
+    tableId: d
+      .integer()
+      .notNull()
+      .references(() => tables.id),
+    // updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+  }),
+);
