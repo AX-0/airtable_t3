@@ -10,8 +10,9 @@ export default function HomeNavbar() {
     <nav className="flex items-center justify-between w-full h-16 px-4 bg-white shadow">
       {/* Left */}
       <div className="flex items-center gap-2">
-        {/* <Menu className="w-6 h-6 text-gray-600" /> //TODO */}
-        <Image src="/logo.png" alt="Logo" width={120} height={32} />
+        <Link href="/">
+          <Image src="/logo.png" alt="Logo" width={120} height={32} className="cursor-pointer" />
+        </Link>
       </div>
 
       {/* Middle, search //TODO */}
@@ -23,7 +24,6 @@ export default function HomeNavbar() {
             placeholder="Search..."
             className="flex-1 bg-transparent border-none outline-none px-2 text-sm"
           />
-          <span className="text-xs text-gray-400">Ctrl K</span>
         </div>
       </div>
 
