@@ -1,23 +1,24 @@
-import HomeNavbar from "~/app/_components/HomeNavbar";
-import TableView from "./TableView";
-
-export default async function ViewPage(props: {
-  params: {
+export default async function ViewPage({
+  params,
+}: {
+  params: Promise<{
     baseId: string;
     tableId: string;
     viewId: string;
-  };
+  }>;
 }) {
-  const { baseId, tableId, viewId } = await props.params;
+  const { baseId, tableId, viewId } = await params;
+
+  const baseIdNum = Number(baseId);
+  const tableIdNum = Number(tableId);
+  const viewIdNum = Number(viewId);
 
   return (
-    <><HomeNavbar />
-    
-    <div className="h-screen w-full flex flex-col">
-      <TableView
-        baseId={Number(baseId)}
-        tableId={Number(tableId)}
-        viewId={Number(viewId)} />
-    </div></>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Table View</h1>
+      <p>Base ID: {baseIdNum}</p>
+      <p>Table ID: {tableIdNum}</p>
+      <p>View ID: {viewIdNum}</p>
+    </div>
   );
 }
