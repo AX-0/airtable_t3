@@ -1,3 +1,6 @@
+import HomeNavbar from "~/app/_components/HomeNavbar";
+import TableView from "./TableView";
+
 export default async function ViewPage({
   params,
 }: {
@@ -14,11 +17,13 @@ export default async function ViewPage({
   const viewIdNum = Number(viewId);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Table View</h1>
-      <p>Base ID: {baseIdNum}</p>
-      <p>Table ID: {tableIdNum}</p>
-      <p>View ID: {viewIdNum}</p>
-    </div>
+    <><HomeNavbar />
+    
+    <div className="h-screen w-full flex flex-col">
+      <TableView
+        baseId={Number(baseId)}
+        tableId={Number(tableId)}
+        viewId={Number(viewId)} />
+    </div></>
   );
 }
