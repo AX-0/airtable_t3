@@ -50,7 +50,7 @@ export default function TableTabs({
                 : "text-gray-700 hover:bg-gray-100"
             }`}
           >
-            {table.name || `Table ${table.id}`}
+            {table.name ?? `Table ${table.id}`}
           </button>
         ))
       )}
