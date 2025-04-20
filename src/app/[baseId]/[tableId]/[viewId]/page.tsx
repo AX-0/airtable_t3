@@ -1,30 +1,41 @@
 import HomeNavbar from "~/app/_components/HomeNavbar";
 import TableView from "./TableView";
+import TableTabs from "./_components/TableTabs"
+
+import { api } from "~/trpc/react";
 
 export default async function ViewPage({
   params,
 }: {
   params: Promise<{
-    baseId: string;
-    tableId: string;
-    viewId: string;
+    baseId: number;
+    tableId: number;
+    viewId: number;
   }>;
 }) {
   const { baseId, tableId, viewId } = await params;
 
-  const baseIdNum = Number(baseId);
-  const tableIdNum = Number(tableId);
-  const viewIdNum = Number(viewId);
+  const baseIdNum = baseId;
+  const tableIdNum = tableId;
+  const viewIdNum = viewId;
+
+  // const { data: tables = [] } = api.base.getAllTableIdName.useQuery({ baseId });
 
   return (
-    <><HomeNavbar />
+    <>
+    
+    <HomeNavbar />
+
+    <TableTabs baseId={baseId} selectedTableId={tableId} viewId={viewId}/>
     
     {/* minus navbar height */}
     <div className="h-[calc(100vh-4rem)] w-full flex flex-col"> 
       <TableView
-        baseId={Number(baseId)}
-        tableId={Number(tableId)}
-        viewId={Number(viewId)} />
-    </div></>
+        baseId={baseId}
+        tableId={tableId}
+        viewId={viewId} />
+    </div>
+    
+    </>
   );
 }

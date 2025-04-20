@@ -143,4 +143,16 @@ export const baseRouter = createTRPCRouter({
 
         return { tableId: table.id, viewId: view.id };
       }),
+
+    getAllTableIdName: protectedProcedure
+      .input(z.object({ baseId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        return ctx.db.query.tables.findMany({
+          where: (tables, { eq }) => eq(tables.baseId, input.baseId),
+          columns: {
+            id: true,
+            name: true,
+          },
+        });
+      }),
   });

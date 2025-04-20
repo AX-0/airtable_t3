@@ -12,7 +12,7 @@ type Props = {
 export function VirtualTable({ tableId }: Props) {
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading } = api.table.getTableData.useQuery({ tableId });
+  const { data, isLoading } = api.table.getTableData.useQuery({ tableId: Number(tableId) });
 
   const [focusedCell, setFocusedCell] = useState<{ row: number; col: number } | null>(null);
 

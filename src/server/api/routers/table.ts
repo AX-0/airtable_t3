@@ -6,8 +6,6 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { tables } from "~/server/db/schema";
-import { eq } from "drizzle-orm";
 
 export const tableRouter = createTRPCRouter({
     getTableData: protectedProcedure
