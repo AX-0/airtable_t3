@@ -45,8 +45,8 @@ export function EditableCell({ rowId, columnId, value, tableId }: Props) {
       }
     },
     // Refresh just in case
-    onSettled: () => {
-      utils.table.getTableData.invalidate();
+    onSettled: async () => {
+      await utils.table.getTableData.invalidate();
     },
   });
   
