@@ -6,7 +6,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { bases } from "~/server/db/schema";
+import { bases, tables, cells, rows, columns, views } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 
 export const baseRouter = createTRPCRouter({
@@ -48,9 +48,63 @@ export const baseRouter = createTRPCRouter({
             return await db.delete(bases).where(eq(bases.id, input.id));
     }),
 
-    // deleteBaseByNameAndUserId: protectedProcedure
-    // .input(z.object({id: z.number()}))
-    // .mutation(async ({ctx, input}) => {
-    //     return await db.delete(bases).where(eq(bases.id, input.id));
-    // })
+    createBaseDefault: protectedProcedure
+    .input(z.object({ baseId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const { baseId } = input;
+  
+      const table = await ctx.db.insert(tables).values({
+        name: "Default Table",
+        baseId,
+      }).returning({ id: tables.id });
+  
+      const tableId = table[0]?.id;
+      if (!tableId) throw new Error("Failed to create table");
+  
+      await ctx.db.insert(views).values({
+        name: "Default View",
+        tableId,
+        filters: [],
+        sorts: [],
+        hiddenColumns: [],
+        searchTerm: "",
+      });
+  
+      const colIds = [];
+      for (let i = 1; i <= 5; i++) { // 5 cols
+        const col = await ctx.db.insert(columns).values({
+          name: `col_${i}`,
+          tableId,
+        }).returning({ id: columns.id });
+
+        if (!col[0]) throw new Error("Failed to insert column");
+        colIds.push(col[0].id);
+      }
+  
+      const rowIds = [];
+      for (let i = 0; i < 10; i++) { // 10 rows
+        const row = await ctx.db.insert(rows).values({
+          name: `Row ${i + 1}`,
+          tableId,
+        }).returning({ id: rows.id });
+
+        if (!row[0]) throw new Error("Failed to insert column");
+        rowIds.push(row[0].id);
+      }
+  
+      const faker = await import("@faker-js/faker").then((m) => m.faker);
+      const cellData = [];
+  
+      for (const rowId of rowIds) {
+        for (const colId of colIds) {
+          const value = faker.helpers.arrayElement([
+            faker.person.fullName(),
+            faker.number.int({ min: 1, max: 1000 }).toString(),
+          ]);
+          cellData.push({ rowId, columnId: colId, value });
+        }
+      }
+  
+      await ctx.db.insert(cells).values(cellData);
+    }),
   });
