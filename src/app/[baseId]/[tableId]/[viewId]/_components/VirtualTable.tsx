@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { api } from "~/trpc/react";
 import { EditableCell } from "./EditableCell";
@@ -13,6 +13,8 @@ export function VirtualTable({ tableId }: Props) {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const { data, isLoading } = api.table.getTableData.useQuery({ tableId });
+
+  const [focusedCell, setFocusedCell] = useState<{ row: number; col: number } | null>(null);
 
   const columns = data?.columns ?? [];
   const rows = data?.rows ?? [];
@@ -81,6 +83,33 @@ export function VirtualTable({ tableId }: Props) {
                   columnId={col.id}
                   value={value}
                   tableId={tableId}
+                  isFocused={focusedCell?.row === row.id && focusedCell?.col === col.id}
+                  onTab={(direction) => {
+                    const rowIndex = rows.findIndex((r) => r.id === row.id);
+                    const colIndex = columns.findIndex((c) => c.id === col.id);
+
+                    let nextRow = rowIndex;
+                    let nextCol = direction === "next" ? colIndex + 1 : colIndex - 1;
+
+                    if (nextCol >= columns.length) {
+                      nextCol = 0;
+                      nextRow += 1;
+                    } else if (nextCol < 0) {
+                      nextRow -= 1;
+                      nextCol = columns.length - 1;
+                    }
+
+                    if (nextRow < 0 || nextRow >= rows.length) return;
+                    const nextRowObj = rows[nextRow];
+                    const nextColObj = columns[nextCol];
+                    if (!nextRowObj || !nextColObj) return;
+                    
+                    setFocusedCell({
+                      row: Number(nextRowObj.id),
+                      col: Number(nextColObj.id),
+                    });
+                    
+                  }}
                 />
               );
             })}
