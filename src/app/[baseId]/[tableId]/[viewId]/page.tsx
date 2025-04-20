@@ -19,7 +19,8 @@ export default async function ViewPage({
   return (
     <><HomeNavbar />
     
-    <div className="h-screen w-full flex flex-col">
+    {/* minus navbar height */}
+    <div className="h-[calc(100vh-4rem)] w-full flex flex-col"> 
       <TableView
         baseId={Number(baseId)}
         tableId={Number(tableId)}

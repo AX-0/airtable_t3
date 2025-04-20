@@ -36,7 +36,8 @@ export function VirtualTable({ tableId }: Props) {
   if (isLoading) return <div className="p-4 text-gray-600">Loading table...</div>;
 
   return (
-    <div ref={parentRef} className="overflow-auto h-full w-full border-t">
+    // minus nav bar height
+    <div ref={parentRef} className="overflow-auto h-[calc(100vh-4rem)] w-full border-t">
       <div
         style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}
       >

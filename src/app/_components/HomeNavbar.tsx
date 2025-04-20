@@ -7,7 +7,7 @@ import { signOut } from "next-auth/react"
 
 export default function HomeNavbar() {
   return (
-    <nav className="flex items-center justify-between w-full h-16 px-4 bg-white shadow">
+    <nav className="sticky top-0 z-50 flex items-center justify-between w-full h-16 px-4 bg-white shadow">
       {/* Left */}
       <div className="flex items-center gap-2">
         <Link href="/">
