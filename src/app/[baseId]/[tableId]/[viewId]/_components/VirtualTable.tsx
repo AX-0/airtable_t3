@@ -40,40 +40,49 @@ export function VirtualTable({ tableId }: Props) {
       <div
         style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}
       >
-        {/* header row */}
-        <div className="sticky top-0 z-10 flex bg-gray-100 border-b border-gray-300">
+        {/* Header Row */}
+        <div className="sticky top-0 z-10 flex bg-gray-100 border-b border-gray-300 text-sm text-gray-700 font-medium">
+          <div className="w-[60px] px-3 py-2 border-r bg-white text-center">#</div>
           {columns.map((col) => (
-            <div key={col.id} className="min-w-[200px] px-3 py-2 font-medium border-r">
+            <div
+              key={col.id}
+              className="min-w-[200px] px-3 py-2 border-r bg-white"
+            >
               {col.name}
             </div>
           ))}
         </div>
 
-        {/* rows */}
+        {/* Data Rows */}
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const row = rows[virtualRow.index];
-          if (!row) return null;          
+          if (!row) return null;
 
           return (
             <div
               key={row.id}
-              className="flex border-b border-gray-200 absolute left-0 w-full"
+              className="flex absolute left-0 w-full border-t border-gray-200"
               style={{ transform: `translateY(${virtualRow.start}px)` }}
             >
-              {columns.map((col) => {
-                const cellKey = `${row.id}_${col.id}`;
-                const value = cellMap.get(cellKey) ?? "";
 
+            <div className="w-[60px] px-3 py-2 border-r text-center bg-gray-50">
+              {virtualRow.index + 1}
+            </div>
 
-                return (
-                  <EditableCell
-                    key={col.id}
-                    rowId={row.id.toString()}
-                    columnId={col.id.toString()}
-                    value={value}
-                  />
-                );
-              })}
+            {columns.map((col) => {
+              const cellKey = `${row.id}_${col.id}`;
+              const value = cellMap.get(cellKey) ?? "";
+
+              return (
+                <EditableCell
+                  key={col.id}
+                  rowId={row.id.toString()}
+                  columnId={col.id.toString()}
+                  value={value}
+                />
+              );
+            })}
+            
             </div>
           );
         })}

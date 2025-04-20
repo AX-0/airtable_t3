@@ -30,23 +30,25 @@ export function EditableCell({ rowId, columnId, value }: Props) {
 
   return (
     <div
-      className="min-w-[200px] px-3 py-2 border-r text-sm text-gray-800"
+      className="w-[200px] px-3 py-2 text-sm text-gray-800 border-r border-gray-200 overflow-hidden whitespace-nowrap text-ellipsis"
       onClick={() => setEditing(true)}
     >
-      {editing ? (
-        <input
-          value={input}
-          autoFocus
-          onChange={(e) => setInput(e.target.value)}
-          onBlur={handleSave}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSave();
-          }}
-          className="w-full border px-1 py-0.5 rounded text-sm"
-        />
-      ) : (
-        <span>{value}</span>
-      )}
+
+    {editing ? (
+      <input
+        value={input}
+        autoFocus
+        onChange={(e) => setInput(e.target.value)}
+        onBlur={handleSave}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleSave();
+        }}
+        className="w-full border px-1 py-0.5 rounded text-sm"
+      />
+    ) : (
+      <span>{value}</span>
+    )}
+    
     </div>
   );
 }
