@@ -49,10 +49,20 @@ export const baseRouter = createTRPCRouter({
     }),
 
     createBaseDefault: protectedProcedure
-    .input(z.object({ baseId: z.number() }))
+    .input(z.object({ name: z.string().min(1) }))
     .mutation(async ({ input, ctx }) => {
-      const { baseId } = input;
+      const { name } = input;
+
+      // Create base
+      const [base] = await ctx.db.insert(bases).values({
+        name,
+        ownerId: ctx.session.user.id,
+      }).returning({ id: bases.id });
+
+      const baseId = base?.id;
+      if (!baseId) throw new Error("Failed to create base");
   
+      // Create table
       const table = await ctx.db.insert(tables).values({
         name: "Default Table",
         baseId,
@@ -61,6 +71,7 @@ export const baseRouter = createTRPCRouter({
       const tableId = table[0]?.id;
       if (!tableId) throw new Error("Failed to create table");
   
+      // Create view
       await ctx.db.insert(views).values({
         name: "Default View",
         tableId,
@@ -70,6 +81,7 @@ export const baseRouter = createTRPCRouter({
         searchTerm: "",
       });
   
+      // Create cols
       const colIds = [];
       for (let i = 1; i <= 5; i++) { // 5 cols
         const col = await ctx.db.insert(columns).values({
@@ -81,6 +93,7 @@ export const baseRouter = createTRPCRouter({
         colIds.push(col[0].id);
       }
   
+      // Create rows
       const rowIds = [];
       for (let i = 0; i < 10; i++) { // 10 rows
         const row = await ctx.db.insert(rows).values({
@@ -92,6 +105,7 @@ export const baseRouter = createTRPCRouter({
         rowIds.push(row[0].id);
       }
   
+      // Create and populate cells
       const faker = await import("@faker-js/faker").then((m) => m.faker);
       const cellData = [];
   
