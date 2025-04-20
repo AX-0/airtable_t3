@@ -53,7 +53,7 @@ export function EditableCell({ rowId, columnId, value, tableId, isFocused, onTab
   const handleSave = () => {
     setEditing(false);
     if (input !== value) {
-      void updateCell.mutate({ rowId, columnId, value: input, tableId });
+      void updateCell.mutate({ rowId, columnId, value: input, tableId: Number(tableId) });
     }
   };
 
