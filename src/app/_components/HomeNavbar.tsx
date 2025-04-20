@@ -16,7 +16,7 @@ export default function HomeNavbar() {
       </div>
 
       {/* Middle, search //TODO */}
-      <div className="flex items-center flex-1 max-w-lg mx-8">
+      {/* <div className="flex items-center flex-1 max-w-lg mx-8">
         <div className="flex items-center w-full px-4 py-2 bg-gray-100 rounded-full">
           <Search className="w-5 h-5 text-gray-500" />
           <input
@@ -25,7 +25,7 @@ export default function HomeNavbar() {
             className="flex-1 bg-transparent border-none outline-none px-2 text-sm"
           />
         </div>
-      </div>
+      </div> */}
 
       {/* Right */}
       <div className="flex items-center gap-4">
