@@ -4,27 +4,60 @@ import { useState } from "react";
 import { api } from "~/trpc/react";
 
 type Props = {
-  rowId: string;
-  columnId: string;
+  rowId: number;
+  columnId: number;
   value: string;
+  tableId: number;
 };
 
-export function EditableCell({ rowId, columnId, value }: Props) {
+export function EditableCell({ rowId, columnId, value, tableId }: Props) {
   const [editing, setEditing] = useState(false);
   const [input, setInput] = useState(value);
 
   const utils = api.useUtils();
 
   const updateCell = api.cell.update.useMutation({
-    onSuccess: async () => {
-      await utils.table.getTableData.invalidate(); // refresh updated cell
+    onMutate: async ({ rowId, columnId, value, tableId }) => {
+      await utils.table.getTableData.cancel();
+  
+      const prevData = utils.table.getTableData.getData({ tableId });
+  
+      utils.table.getTableData.setData({ tableId }, (old) => {
+        if (!old) return old;
+  
+        const newCells = old.cells.map((cell) => {
+          if (cell.rowId === rowId && cell.columnId === columnId) {
+            return { ...cell, value };
+          }
+          return cell;
+        });
+  
+        return { ...old, cells: newCells };
+      });
+  
+      return { prevData };
+    },
+
+    // Rollback if failed
+    onError: (_err, _variables, context) => {
+      if (context?.prevData) {
+        utils.table.getTableData.setData({ tableId }, context.prevData);
+      }
+    },
+    // Refresh just in case
+    onSettled: () => {
+      utils.table.getTableData.invalidate();
     },
   });
+  
 
   const handleSave = () => {
     setEditing(false);
     if (input !== value) {
-      updateCell.mutate({ rowId, columnId, value: input });
+      updateCell.mutate({
+        rowId, columnId, value: input,
+        tableId: tableId
+      });
     }
   };
 
@@ -48,7 +81,7 @@ export function EditableCell({ rowId, columnId, value }: Props) {
     ) : (
       <span>{value}</span>
     )}
-    
+
     </div>
   );
 }

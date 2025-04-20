@@ -11,15 +11,15 @@ import { eq } from "drizzle-orm";
 
 export const tableRouter = createTRPCRouter({
     getTableData: protectedProcedure
-    .input(z.object({ tableId: z.string() }))
+    .input(z.object({ tableId: z.number() }))
     .query(async ({ input, ctx }) => {
       const columnsResult = await db.query.columns.findMany({
-        where: ((c, { eq }) => eq(c.tableId, Number(input.tableId))),
+        where: ((c, { eq }) => eq(c.tableId, input.tableId)),
         orderBy: (c, { asc }) => asc(c.id),
       });
   
       const rowsResult = await db.query.rows.findMany({
-        where: ((c, { eq }) => eq(c.tableId, Number(input.tableId))),
+        where: ((c, { eq }) => eq(c.tableId, input.tableId)),
         orderBy: (r, { asc }) => asc(r.id),
       });
   

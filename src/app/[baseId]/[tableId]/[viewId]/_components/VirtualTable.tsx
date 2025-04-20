@@ -12,7 +12,7 @@ type Props = {
 export function VirtualTable({ tableId }: Props) {
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading } = api.table.getTableData.useQuery({ tableId: tableId.toString() });
+  const { data, isLoading } = api.table.getTableData.useQuery({ tableId });
 
   const columns = data?.columns ?? [];
   const rows = data?.rows ?? [];
@@ -76,13 +76,14 @@ export function VirtualTable({ tableId }: Props) {
               return (
                 <EditableCell
                   key={col.id}
-                  rowId={row.id.toString()}
-                  columnId={col.id.toString()}
+                  rowId={row.id}
+                  columnId={col.id}
                   value={value}
+                  tableId={tableId}
                 />
               );
             })}
-            
+
             </div>
           );
         })}

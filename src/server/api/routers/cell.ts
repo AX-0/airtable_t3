@@ -12,9 +12,10 @@ import { and, eq } from "drizzle-orm";
 export const cellRouter = createTRPCRouter({
     update: protectedProcedure
       .input(z.object({
-        rowId: z.string(),
-        columnId: z.string(),
+        rowId: z.number(),
+        columnId: z.number(),
         value: z.string(),
+        tableId: z.number(),
       }))
       .mutation(async ({ input }) => {
         return await db
