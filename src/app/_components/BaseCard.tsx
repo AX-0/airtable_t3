@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { NotepadText } from "lucide-react";
+import { useState } from "react";
+import { api } from "~/trpc/react";
 
 type BaseCardProps = {
   base: {
@@ -12,9 +14,21 @@ type BaseCardProps = {
 
 export default function BaseCard({ base }: BaseCardProps) {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const utils = api.useUtils();
 
-  const handleClick = () => {
-    router.push(`/${base.id}/1/1`);
+  const getFirstTableView = api.base.getFirstTableAndView.useMutation();
+
+  const handleClick = async () => {
+    setLoading(true);
+    try {
+      const res = await getFirstTableView.mutateAsync({ baseId: base.id });
+      router.push(`/${base.id}/${res.tableId}/${res.viewId}`);
+    } catch (err) {
+      console.error("Failed to fetch first table/view:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

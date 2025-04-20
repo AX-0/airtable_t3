@@ -121,4 +121,26 @@ export const baseRouter = createTRPCRouter({
   
       await ctx.db.insert(cells).values(cellData);
     }),
+
+    getFirstTableAndView: protectedProcedure
+      .input(z.object({ baseId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const [table] = await ctx.db
+          .select({ id: tables.id })
+          .from(tables)
+          .where(eq(tables.baseId, input.baseId))
+          .limit(1);
+
+        if (!table) throw new Error("No table found");
+
+        const [view] = await ctx.db
+          .select({ id: views.id })
+          .from(views)
+          .where(eq(views.tableId, table.id))
+          .limit(1);
+
+        if (!view) throw new Error("No view found");
+
+        return { tableId: table.id, viewId: view.id };
+      }),
   });
