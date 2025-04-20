@@ -54,7 +54,7 @@ export function EditableCell({ rowId, columnId, value, tableId }: Props) {
   const handleSave = () => {
     setEditing(false);
     if (input !== value) {
-      updateCell.mutate({
+      void updateCell.mutate({
         rowId, columnId, value: input,
         tableId: tableId
       });
