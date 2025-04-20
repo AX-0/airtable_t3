@@ -220,6 +220,11 @@ export const views = createTable(
       .integer()
       .notNull()
       .references(() => tables.id),
-    // updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+
+    // View configuration:
+    filters: d.jsonb().default([]), // [{ columnId, operator, value }]
+    sorts: d.jsonb().default([]), // [{ columnId, direction }]
+    hiddenColumns: d.jsonb().default([]), // [columnId, columnId, ...]
+    searchTerm: d.varchar({ length: 256 }), // optional text search
   }),
 );
