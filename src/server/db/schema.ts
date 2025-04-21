@@ -153,7 +153,7 @@ export const columns = createTable(
   "columns",
   (d) => ({
     id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    name: d.varchar({ length: 256 }),
+    name: d.varchar({ length: 256 }).notNull(),
     tableId: d
       .integer()
       .notNull()
@@ -173,7 +173,7 @@ export const rows = createTable(
   "rows",
   (d) => ({
     id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    name: d.varchar({ length: 256 }),
+    name: d.varchar({ length: 256 }).notNull(),
     tableId: d
       .integer()
       .notNull()

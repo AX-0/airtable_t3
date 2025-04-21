@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { api } from "~/trpc/react";
 import { EditableCell } from "./EditableCell";
+import EditableColumnHeader from "./EditableColumnHeader";
 
 interface Props {
   tableId: number;
@@ -67,13 +68,16 @@ export function VirtualTable({ tableId }: Props) {
         <div className="sticky top-0 z-10 flex bg-gray-100 border-b border-gray-300 text-sm text-gray-700 font-medium">
           <div className="w-[60px] px-3 py-2 border-r bg-white text-center">#</div>
           {columns.map((col) => (
-            <div
+            <EditableColumnHeader
               key={col.id}
-              className="min-w-[200px] px-3 py-2 border-r bg-white"
-            >
-              {col.name}
-            </div>
+              columnId={col.id}
+              name={col.name}
+              tableId={tableId}
+            />
           ))}
+
+          <EditableColumnHeader tableId={tableId} isAddColumn />
+
         </div>
 
         {/* Data Rows */}
@@ -133,6 +137,8 @@ export function VirtualTable({ tableId }: Props) {
                 />
               );
             })}
+
+            <div className="w-[200px] px-3 py-2 border-r" />
 
             </div>
           );
