@@ -14,12 +14,6 @@ export default async function ViewPage({
 }) {
   const { baseId, tableId, viewId } = await params;
 
-  const baseIdNum = baseId;
-  const tableIdNum = tableId;
-  const viewIdNum = viewId;
-
-  // const { data: tables = [] } = api.base.getAllTableIdName.useQuery({ baseId });
-
   return (
     <>
     <TableTabs baseId={baseId} selectedTableId={tableId} viewId={viewId}/>

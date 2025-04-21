@@ -26,9 +26,11 @@ export default function TableTabs({ baseId, selectedTableId, viewId }: TableTabs
     },
   });
 
+  console.log(selectedTableId);
+
   return (
     <>
-      <div className="flex items-center px-4 py-0.5 border-b bg-white shadow-sm">
+      <div className="sticky flex items-center px-4 py-0.5 border-b bg-gray-200 shadow-sm">
         <div className="flex gap-2">
           {isLoading ? (
             <span className="text-sm text-gray-500">...</span>
@@ -37,11 +39,13 @@ export default function TableTabs({ baseId, selectedTableId, viewId }: TableTabs
               <button
                 key={table.id}
                 onClick={() => getFirstView.mutate({ tableId: table.id })}
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-                  table.id === selectedTableId
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
+                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition 
+                  ${
+                    Number(table.id) === Number(selectedTableId)
+                    ? "bg-black text-white"
+                    : "text-black bg-white cursor-pointer"
+                  }
+                `}
               >
                 {table.name ?? `Table ${table.id}`}
               </button>
@@ -50,7 +54,7 @@ export default function TableTabs({ baseId, selectedTableId, viewId }: TableTabs
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
-          <div className="flex items-center px-4 py-1 bg-gray-100 rounded-full">
+          <div className="flex items-center px-4 py-1 bg-white rounded-full">
             <Search className="w-5 h-5 text-gray-500" />
             <input
               type="text"
