@@ -75,7 +75,7 @@ export default function BaseCard({ base }: BaseCardProps) {
             <h3 className="text-lg font-semibold mb-4 text-gray-800">Delete Base</h3>
 
             <p className="text-sm text-gray-600 mb-6">
-              Are you sure you want to delete <strong>{base.name || "this base"}</strong>? This action cannot be undone.
+              Are you sure you want to delete <strong>{base.name ?? "this base"}</strong>? This action cannot be undone.
             </p>
 
             <div className="flex justify-end gap-3">
