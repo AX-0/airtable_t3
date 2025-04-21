@@ -6,6 +6,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
+import { columns, rows, tables, views } from "~/server/db/schema";
 
 export const tableRouter = createTRPCRouter({
     getTableData: protectedProcedure
@@ -32,4 +33,44 @@ export const tableRouter = createTRPCRouter({
         cells: cellsResult,
       };
     }),
+
+    createTableAndView: protectedProcedure
+    .input(z.object({ baseId: z.number(), name: z.string().min(1) }))
+    .mutation(async ({ input, ctx }) => {
+      const table = await ctx.db.insert(tables).values({
+        name: input.name,
+        baseId: input.baseId,
+      }).returning({ id: tables.id });
+  
+      const tableId = table[0]?.id;
+      if (!tableId) throw new Error("Failed to create table");
+  
+      // Create a default view
+      const view = await ctx.db.insert(views).values({
+        name: "Default View",
+        tableId,
+        filters: [],
+        sorts: [],
+        hiddenColumns: [],
+        searchTerm: "",
+      }).returning({ id: views.id });
+  
+      const viewId = view[0]?.id;
+      if (!viewId) throw new Error("Failed to create view");
+
+      // Create a col
+      const col = await ctx.db.insert(columns).values({
+        name: `col_1`,
+        tableId,
+      }).returning({ id: columns.id });
+
+      // Create a row
+      const row = await ctx.db.insert(rows).values({
+        name: `Row 1`,
+        tableId,
+      }).returning({ id: rows.id });
+  
+      return { tableId, viewId };
+    })
+  
 }) 
