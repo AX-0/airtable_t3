@@ -12,34 +12,47 @@ type Props = {
   onTab: (direction: "next" | "prev", rowId: number, columnId: number) => void;
 };
 
-export function EditableCell({ rowId, columnId, value, tableId, isFocused, onTab }: Props) {
+export function EditableCell({
+  rowId,
+  columnId,
+  value,
+  tableId,
+  isFocused,
+  onTab,
+}: Props) {
   const [editing, setEditing] = useState(false);
   const [input, setInput] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
   const utils = api.useUtils();
 
   const updateCell = api.cell.update.useMutation({
-    onMutate: async ({ rowId, columnId, value, tableId }) => {
-      await utils.table.getTableData.cancel();
-      const prevData = utils.table.getTableData.getData({ tableId });
+    onMutate: ({ rowId, columnId, value }) => {
+      const prevData = utils.table.getTableData.getInfiniteData({ tableId });
 
-      utils.table.getTableData.setData({ tableId }, (old) => {
+      utils.table.getTableData.setInfiniteData({ tableId }, (old) => {
         if (!old) return old;
-        const newCells = old.cells.map((cell) =>
-          cell.rowId === rowId && cell.columnId === columnId ? { ...cell, value } : cell,
-        );
-        return { ...old, cells: newCells };
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            cells: page.cells.map((cell) =>
+              cell.rowId === rowId && cell.columnId === columnId
+                ? { ...cell, value }
+                : cell
+            ),
+          })),
+        };
       });
 
       return { prevData };
     },
-    onError: (_err, _variables, context) => {
-      if (context?.prevData) {
-        utils.table.getTableData.setData({ tableId }, context.prevData);
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prevData) {
+        utils.table.getTableData.setInfiniteData({ tableId }, ctx.prevData);
       }
     },
-    onSettled: async () => {
-      await utils.table.getTableData.invalidate();
+    onSettled: () => {
+      void utils.table.getTableData.invalidate();
     },
   });
 
@@ -53,7 +66,7 @@ export function EditableCell({ rowId, columnId, value, tableId, isFocused, onTab
   const handleSave = () => {
     setEditing(false);
     if (input !== value) {
-      void updateCell.mutate({ rowId, columnId, value: input, tableId: Number(tableId) });
+      updateCell.mutate({ rowId, columnId, value: input, tableId: Number(tableId) });
     }
   };
 
@@ -80,7 +93,7 @@ export function EditableCell({ rowId, columnId, value, tableId, isFocused, onTab
           className="w-full border px-1 py-0.5 rounded text-sm"
         />
       ) : (
-        <span>{value}</span>
+        <span>{input}</span>
       )}
     </div>
   );

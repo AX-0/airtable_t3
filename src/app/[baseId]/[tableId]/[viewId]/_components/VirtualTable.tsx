@@ -5,20 +5,32 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { api } from "~/trpc/react";
 import { EditableCell } from "./EditableCell";
 
-type Props = {
+interface Props {
   tableId: number;
-};
+}
 
 export function VirtualTable({ tableId }: Props) {
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading } = api.table.getTableData.useQuery({ tableId: Number(tableId) });
-
   const [focusedCell, setFocusedCell] = useState<{ row: number; col: number } | null>(null);
 
-  const columns = data?.columns ?? [];
-  const rows = data?.rows ?? [];
-  const cells = data?.cells ?? [];
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = api.table.getTableData.useInfiniteQuery(
+    { tableId: Number(tableId), limit: 100 },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      refetchOnWindowFocus: false,
+    }
+  );
+
+  const rows = data?.pages.flatMap((page) => page.rows) ?? [];
+  const columns = data?.pages[0]?.columns ?? [];
+  const cells = data?.pages.flatMap((page) => page.cells) ?? [];
 
   const cellMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -34,6 +46,14 @@ export function VirtualTable({ tableId }: Props) {
     estimateSize: () => 40,
     overscan: 10,
   });
+
+  useEffect(() => {
+    const [lastItem] = rowVirtualizer.getVirtualItems().slice(-1);
+    if (!lastItem) return;
+    if (lastItem.index >= rows.length - 1 && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [rowVirtualizer.getVirtualItems(), rows.length, hasNextPage, isFetchingNextPage]);
 
   if (isLoading) return <div className="p-4 text-gray-600">Loading table...</div>;
 
