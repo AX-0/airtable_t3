@@ -51,7 +51,7 @@ export function VirtualTable({ tableId }: Props) {
     const [lastItem] = rowVirtualizer.getVirtualItems().slice(-1);
     if (!lastItem) return;
     if (lastItem.index >= rows.length - 1 && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
+      void fetchNextPage();
     }
   }, [rowVirtualizer.getVirtualItems(), rows.length, hasNextPage, isFetchingNextPage]);
 
