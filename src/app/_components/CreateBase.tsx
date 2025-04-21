@@ -10,7 +10,7 @@ export function CreateBase() {
   const utils = api.useUtils();
   const router = useRouter();
 
-  const createBase = api.base.createBase.useMutation({
+  const createBase = api.base.createBaseDefault.useMutation({
     onSuccess: async () => {
       await utils.base.getBases.invalidate();
       router.refresh();
