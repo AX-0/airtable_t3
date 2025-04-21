@@ -9,7 +9,7 @@ import SuperJSON from "superjson";
 import { auth } from "~/server/auth";
 import { api, HydrateClient } from "~/trpc/server";
 
-import HomeNavbar from "./_components/HomeNavbar";
+
 import CreateBaseFallback from "./_components/CreateBaseFallback";
 import CreateBaseTrigger from "./_components/CreateBaseTrigger";
 import BaseCard from "./_components/BaseCard";
@@ -40,7 +40,6 @@ export default async function Home() {
 
   return (
     <HydrateClient>
-      <HomeNavbar />
       <main className="min-h-screen bg-[#f9fafb] p-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Home</h1>
 

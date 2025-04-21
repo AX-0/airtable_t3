@@ -1,4 +1,3 @@
-import HomeNavbar from "~/app/_components/HomeNavbar";
 import TableView from "./TableView";
 import TableTabs from "./_components/TableTabs"
 
@@ -23,9 +22,6 @@ export default async function ViewPage({
 
   return (
     <>
-    
-    <HomeNavbar />
-
     <TableTabs baseId={baseId} selectedTableId={tableId} viewId={viewId}/>
     
     {/* minus navbar height */}

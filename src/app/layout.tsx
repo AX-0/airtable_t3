@@ -4,7 +4,7 @@ import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
-// import Navbar from "./_components/Navbar";
+import HomeNavbar from "./_components/HomeNavbar";
 
 export const metadata: Metadata = {
   title: "Airtable T3",
@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable}`}>
       <body>
-        {/* <Navbar /> */}
+        <HomeNavbar />
         <TRPCReactProvider>{children}</TRPCReactProvider>
       </body>
     </html>
