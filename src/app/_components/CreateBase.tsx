@@ -1,23 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
+import { api } from "~/trpc/react";
 
-export function CreateBase({
-  triggerButton,
-}: {
-  triggerButton: (open: () => void) => React.ReactNode;
-}) {
+export function CreateBase() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const utils = api.useUtils();
   const router = useRouter();
 
-  const createBase = api.base.createBaseDefault.useMutation({
+  const createBase = api.base.createBase.useMutation({
     onSuccess: async () => {
       await utils.base.getBases.invalidate();
-      router.refresh(); // re-runs server component to fetch fresh data
+      router.refresh();
       setOpen(false);
       setName("");
     },
@@ -25,7 +21,12 @@ export function CreateBase({
 
   return (
     <>
-      {triggerButton(() => setOpen(true))}
+      <button
+        onClick={() => setOpen(true)}
+        className="flex justify-center items-center rounded-xl bg-blue-500 text-white text-lg font-semibold shadow-sm hover:shadow-md transition p-4 cursor-pointer"
+      >
+        Create New Base
+      </button>
 
       {open && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">

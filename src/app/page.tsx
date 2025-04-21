@@ -10,9 +10,10 @@ import { auth } from "~/server/auth";
 import { api, HydrateClient } from "~/trpc/server";
 
 
-import CreateBaseFallback from "./_components/CreateBaseFallback";
-import CreateBaseTrigger from "./_components/CreateBaseTrigger";
+// import CreateBaseFallback from "./_components/CreateBaseFallback";
+// import CreateBaseTrigger from "./_components/CreateBaseTrigger";
 import BaseCard from "./_components/BaseCard";
+import { CreateBase } from "./_components/CreateBase";
 
 export default async function Home() {
   // const hello = await api.post.hello({ text: "from tRPC" });
@@ -43,9 +44,9 @@ export default async function Home() {
       <main className="min-h-screen bg-[#f9fafb] p-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Home</h1>
 
-        {bases.length === 0 ? (
+        {/* {bases.length === 0 ? (
           <CreateBaseFallback />
-        ) : (
+        ) : ( */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {bases.map((base) => (
               <BaseCard key={base.id} base={base} />
@@ -53,10 +54,12 @@ export default async function Home() {
 
 
             {/* <div className="flex justify-between items-center rounded-xl bg-white shadow-sm hover:shadow-md transition p-4 cursor-pointer"> */}
-            <CreateBaseTrigger />
+            {/* <CreateBaseTrigger /> */}
             {/* </div> */}
+            <CreateBase />
+
           </div>
-        )}
+        {/* )} */}
       </main>
     </HydrateClient>
   );
