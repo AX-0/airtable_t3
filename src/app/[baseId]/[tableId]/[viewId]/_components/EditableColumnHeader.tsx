@@ -12,8 +12,8 @@ type Props = {
 };
 
 export default function EditableColumnHeader({ columnId, name, tableId, isAddColumn }: Props) {
-  const [editing, setEditing] = useState(isAddColumn ?? false);
-  const [input, setInput] = useState(isAddColumn ? "" : name ?? "");
+    const [editing, setEditing] = useState(isAddColumn ?? false);
+    const [input, setInput] = useState(() => (isAddColumn ? "" : name ?? ""));
   const inputRef = useRef<HTMLInputElement>(null);
 
   const utils = api.useUtils();
@@ -47,19 +47,25 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
     },
   });
 
-  useEffect(() => {
-    if (editing) inputRef.current?.focus();
-  }, [editing]);
+//   useEffect(() => {
+//     if (!editing) {
+//       setInput(name ?? "");
+//     }
+//   }, [name, editing]);
 
   const handleSave = () => {
     setEditing(false);
     if (!input.trim()) return;
+  
     if (isAddColumn) {
       createColumn.mutate({ name: input, tableId: Number(tableId) });
-    } else if (columnId && input !== name) {
-      updateColumn.mutate({ columnId, name: input, tableId });
+    } else if (columnId) {
+      updateColumn.mutate({ columnId, name: input, tableId: Number(tableId) });
     }
   };
+
+  console.log(input);
+  
 
   return (
     <div
@@ -79,7 +85,7 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
         />
       ) : (
         <span className="text-blue-600">
-            {isAddColumn ? <Plus className="w-4 h-4 inline" /> : name}
+            {isAddColumn ? <Plus className="w-4 h-4 inline" /> : input}
         </span>
       )}
     </div>
