@@ -7,7 +7,7 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 import { bases, tables, cells, rows, columns, views } from "~/server/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 export const baseRouter = createTRPCRouter({
     getBases: protectedProcedure.query(async ({ ctx }) => {
@@ -43,9 +43,56 @@ export const baseRouter = createTRPCRouter({
     }),
 
     deleteBase: protectedProcedure
-        .input(z.object({id: z.number()}))
-        .mutation(async ({ctx, input}) => {
-            return await db.delete(bases).where(eq(bases.id, input.id));
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const baseId = input.id;
+  
+      // Step 1: Find all tables under the base
+      const tableRecords = await ctx.db
+        .select({ id: tables.id })
+        .from(tables)
+        .where(eq(tables.baseId, baseId));
+  
+      const tableIds = tableRecords.map((t) => t.id);
+  
+      // Step 2: Delete all related data per table
+      for (const tableId of tableIds) {
+        // Delete cells (must be before rows and columns)
+        const rowIds = await ctx.db
+          .select({ id: rows.id })
+          .from(rows)
+          .where(eq(rows.tableId, tableId));
+        const colIds = await ctx.db
+          .select({ id: columns.id })
+          .from(columns)
+          .where(eq(columns.tableId, tableId));
+  
+        await ctx.db
+          .delete(cells)
+          .where(
+            and(
+              inArray(cells.rowId, rowIds.map((r) => r.id)),
+              inArray(cells.columnId, colIds.map((c) => c.id))
+            )
+          );
+  
+        // Delete rows
+        await ctx.db.delete(rows).where(eq(rows.tableId, tableId));
+  
+        // Delete columns
+        await ctx.db.delete(columns).where(eq(columns.tableId, tableId));
+  
+        // Delete views
+        await ctx.db.delete(views).where(eq(views.tableId, tableId));
+      }
+  
+      // Step 3: Delete tables
+      await ctx.db.delete(tables).where(inArray(tables.id, tableIds));
+  
+      // Step 4: Delete the base itself
+      await ctx.db.delete(bases).where(eq(bases.id, baseId));
+  
+      return { success: true };
     }),
 
     createBaseDefault: protectedProcedure
