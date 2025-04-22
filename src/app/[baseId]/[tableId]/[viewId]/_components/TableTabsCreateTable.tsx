@@ -18,7 +18,7 @@ export default function CreateTableModal({ baseId, open, onClose }: Props) {
   const utils = api.useUtils();
   const createTable = api.table.createTableAndView.useMutation({
     onSuccess: async () => {
-      await utils.table.invalidate();
+      await utils.base.getAllTableIdName.invalidate();
       onClose();
     },
   });

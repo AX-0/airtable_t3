@@ -19,11 +19,12 @@ export const columnRouter = createTRPCRouter({
     }),
 
     createColumn: protectedProcedure
-    .input(z.object({name: z.string(), tableId: z.number()}))
+    .input(z.object({name: z.string(), tableId: z.number(), type: z.enum(["TEXT", "NUMBER"])}))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.insert(columns).values({
         name: input.name,
         tableId: input.tableId,
+        type: input.type,
       })
     }),
 }) 

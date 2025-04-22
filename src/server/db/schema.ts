@@ -107,8 +107,6 @@ export const verificationTokens = createTable(
   (t) => [primaryKey({ columns: [t.identifier, t.token] })],
 );
 
-export const columnTypeEnum = pgEnum('ColumnType', ['TEXT', 'NUMBER']);
-
 export const bases = createTable(
   "bases",
   (d) => ({
@@ -149,6 +147,8 @@ export const tables = createTable(
 //   baseId: uuid('base_id').references(() => bases.id),
 // });
 
+export const columnTypeEnum = pgEnum('ColumnType', ['TEXT', 'NUMBER']);
+
 export const columns = createTable(
   "columns",
   (d) => ({
@@ -158,7 +158,7 @@ export const columns = createTable(
       .integer()
       .notNull()
       .references(() => tables.id),
-    // updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+    type: columnTypeEnum("ColumnType").notNull().default("TEXT"),
   }),
 );
 
