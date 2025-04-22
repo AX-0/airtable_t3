@@ -20,6 +20,9 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
   const createColumn = api.column.createColumn.useMutation({
     onSuccess: () => utils.table.getTableData.invalidate(),
   });
+
+  const createColumnIsPending = createColumn.isPending;
+
   const updateColumn = api.column.updateColumnName.useMutation({
     onMutate: async ({ columnId, name, tableId }) => {
       const prevData = utils.table.getTableData.getInfiniteData({ tableId });
@@ -85,7 +88,12 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
         />
       ) : (
         <span className="text-blue-600">
-            {isAddColumn ? <Plus className="w-4 h-4 inline" /> : input}
+            { createColumnIsPending ? (
+              "Adding..."
+            ) : (
+              isAddColumn ? <Plus className="w-4 h-4 inline" /> : input
+            )
+            }
         </span>
       )}
     </div>
