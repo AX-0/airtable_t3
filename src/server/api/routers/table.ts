@@ -6,7 +6,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { columns, rows, tables, views } from "~/server/db/schema";
+import { columns, rows, tables, views, cells } from "~/server/db/schema";
 
 export const tableRouter = createTRPCRouter({
   getTableData: protectedProcedure
@@ -73,6 +73,48 @@ export const tableRouter = createTRPCRouter({
     }).returning({ id: rows.id });
 
     return { tableId, viewId };
+  }),
+
+  add1k: protectedProcedure
+  .input(z.object({ tableId: z.number() }))
+  .mutation(async ({ input, ctx }) => {
+    const { tableId } = input;
+
+    const existingCols = await ctx.db.query.columns.findMany({
+      where: (c, { eq }) => eq(c.tableId, tableId),
+    });
+
+    if (existingCols.length === 0) throw new Error("No columns found for the table");
+
+    const colIds = existingCols.map((c) => c.id);
+  
+    // Create rows
+    const rowIds = [];
+    for (let i = 0; i < 1000; i++) { // 10 rows
+      const row = await ctx.db.insert(rows).values({
+        name: `Row ${i + 1}`,
+        tableId,
+      }).returning({ id: rows.id });
+
+      if (!row[0]) throw new Error("Failed to insert column");
+      rowIds.push(row[0].id);
+    }
+
+    // Create and populate cells
+    const faker = await import("@faker-js/faker").then((m) => m.faker);
+    const cellData = [];
+
+    for (const rowId of rowIds) {
+      for (const colId of colIds) {
+        const value = faker.helpers.arrayElement([
+          faker.person.fullName(),
+          faker.number.int({ min: 1, max: 100000 }).toString(),
+        ]);
+        cellData.push({ rowId, columnId: colId, value });
+      }
+    }
+
+    await ctx.db.insert(cells).values(cellData);
   }),
   
 }) 

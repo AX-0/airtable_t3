@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
-import { Plus, Search, Trash2 } from "lucide-react";
+import { Grid2x2Plus, Plus, Search, Trash2 } from "lucide-react";
 import CreateTableModal from "./TableTabsCreateTable";
 
 type TableTabsProps = {
@@ -15,6 +15,7 @@ type TableTabsProps = {
 export default function TableTabs({ baseId, selectedTableId, viewId }: TableTabsProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const utils = api.useUtils();
 
   const { data: tables = [], isLoading } = api.base.getAllTableIdName.useQuery({
     baseId: Number(baseId),
@@ -25,6 +26,15 @@ export default function TableTabs({ baseId, selectedTableId, viewId }: TableTabs
       router.push(`/${baseId}/${tableId}/${viewId}`);
     },
   });
+
+  const add1kRows = api.table.add1k.useMutation({
+    onSuccess: async () => {
+      await utils.table.getTableData.invalidate();
+      router.refresh();
+    },
+  });
+
+  const isPending = add1kRows.isPending;
 
   console.log(selectedTableId);
 
@@ -75,6 +85,18 @@ export default function TableTabs({ baseId, selectedTableId, viewId }: TableTabs
             className="px-3 py-1.5 text-sm rounded-full text-blue-600 hover:bg-gray-200 transition cursor-pointer"
           >
             <Plus />
+          </button>
+
+          <button
+            onClick={() => add1kRows.mutate({tableId: Number(selectedTableId)})}
+            className="px-3 py-1.5 text-sm rounded-full text-blue-600 hover:bg-gray-200 transition cursor-pointer"
+          >
+            {isPending ? (
+              "Adding..."
+            ) : (
+              <Grid2x2Plus />
+            )}
+            
           </button>
         </div>
       </div>
