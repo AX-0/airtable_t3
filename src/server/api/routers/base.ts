@@ -128,44 +128,49 @@ export const baseRouter = createTRPCRouter({
         searchTerm: "",
       });
   
-      // Create cols
-      const colIds = [];
-      for (let i = 1; i <= 5; i++) { // 5 cols
+      // Create columns (text, text, number)
+      const colMeta: { id: number; type: "TEXT" | "NUMBER" }[] = [];
+      const types: ("TEXT" | "NUMBER")[] = ["TEXT", "TEXT", "NUMBER"];
+
+      for (let i = 1; i <= 6; i++) {
+        const type = types[(i - 1) % 3] as "TEXT" | "NUMBER";
         const col = await ctx.db.insert(columns).values({
           name: `col_${i}`,
           tableId,
+          type,
         }).returning({ id: columns.id });
 
         if (!col[0]) throw new Error("Failed to insert column");
-        colIds.push(col[0].id);
+        colMeta.push({ id: col[0].id, type });
       }
-  
+
       // Create rows
-      const rowIds = [];
-      for (let i = 0; i < 10; i++) { // 10 rows
+      const rowIds: number[] = [];
+      for (let i = 0; i < 10; i++) {
         const row = await ctx.db.insert(rows).values({
           name: `Row ${i + 1}`,
           tableId,
         }).returning({ id: rows.id });
 
-        if (!row[0]) throw new Error("Failed to insert column");
+        if (!row[0]) throw new Error("Failed to insert row");
         rowIds.push(row[0].id);
       }
-  
-      // Create and populate cells
+
+      // Generate cells
       const faker = await import("@faker-js/faker").then((m) => m.faker);
       const cellData = [];
-  
+
       for (const rowId of rowIds) {
-        for (const colId of colIds) {
-          const value = faker.helpers.arrayElement([
-            faker.person.fullName(),
-            faker.number.int({ min: 1, max: 1000 }).toString(),
-          ]);
-          cellData.push({ rowId, columnId: colId, value });
+        for (const col of colMeta) {
+          const value =
+            col.type === "NUMBER"
+              ? faker.number.int({ min: 1, max: 100000 }).toString()
+              : faker.person.fullName();
+
+          cellData.push({ rowId, columnId: col.id, value });
         }
       }
-  
+
       await ctx.db.insert(cells).values(cellData);
     }),
 
