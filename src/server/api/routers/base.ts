@@ -133,7 +133,7 @@ export const baseRouter = createTRPCRouter({
       const types: ("TEXT" | "NUMBER")[] = ["TEXT", "TEXT", "NUMBER"];
 
       for (let i = 1; i <= 6; i++) {
-        const type = types[(i - 1) % 3] as "TEXT" | "NUMBER";
+        const type = types[(i - 1) % 3]!;
         const col = await ctx.db.insert(columns).values({
           name: `col_${i}`,
           tableId,
