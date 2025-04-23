@@ -87,7 +87,7 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
   
   return (
     <div
-      className="w-[200px] px-3 py-2 border-r bg-white text-sm font-medium text-gray-700"
+      className="w-[200px] px-3 py-2 border-r bg-gray-200 text-sm font-medium text-gray-700"
       onClick={() => setEditing(true)}
     >
       {editing ? (
@@ -115,7 +115,7 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
         )}
         </>
       ) : (
-        <span className="text-fuchsia-600">
+        <span>
           {createColumnIsPending ? (
             "Adding..."
           ) : (
@@ -124,9 +124,9 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
             ) : (
               <>
                 {colType === "NUMBER" ? (
-                  <Hash className="w-4 h-4 inline mr-1 text-fuchsia-500" />
+                  <Hash className="w-4 h-4 inline mr-1" />
                 ) : (
-                  <Text className="w-4 h-4 inline mr-1 text-fuchsia-500" />
+                  <Text className="w-4 h-4 inline mr-1" />
                 )}
                 {input}
               </>
