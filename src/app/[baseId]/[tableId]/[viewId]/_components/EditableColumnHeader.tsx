@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Hash, Plus, Text } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { api } from "~/trpc/react";
 
@@ -23,6 +23,10 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
     onSuccess: () => utils.table.getTableData.invalidate(),
   });
 
+  const { data: colType } = !isAddColumn && columnId !== undefined
+  ? api.column.getType.useQuery({ columnId: Number(columnId) })
+  : { data: undefined };
+
   const createColumnIsPending = createColumn.isPending;
 
   const updateColumn = api.column.updateColumnName.useMutation({
@@ -41,6 +45,8 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
         };
       });
 
+      void utils.table.getTableData.invalidate();
+
       return { prevData };
     },
     onError: (_err, _vars, ctx) => {
@@ -49,7 +55,7 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
       }
     },
     onSettled: () => {
-      void utils.table.getTableData.invalidate();
+      // void utils.table.getTableData.invalidate();
     },
   });
 
@@ -62,16 +68,22 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
   const handleSave = () => {
     setEditing(false);
     if (!input.trim()) return;
+
+    console.log(type);
   
     if (isAddColumn) {
-      console.log(type);
+      // console.log(type);
       createColumn.mutate({ name: input, type, tableId: Number(tableId) });
-    } else if (columnId) {
+    } else if (columnId && input != name) {
       updateColumn.mutate({ columnId, name: input, tableId: Number(tableId) });
     }
   };
 
   // console.log(input);
+  // console.log(type)
+
+  // console.log("input" + input)
+  // console.log(name)
   
   return (
     <div
@@ -103,13 +115,23 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
         )}
         </>
       ) : (
-        <span className="text-blue-600">
-            { createColumnIsPending ? (
-              "Adding..."
+        <span className="text-fuchsia-600">
+          {createColumnIsPending ? (
+            "Adding..."
+          ) : (
+            isAddColumn ? (
+              <Plus className="w-4 h-4 inline" />
             ) : (
-              isAddColumn ? <Plus className="w-4 h-4 inline" /> : input
+              <>
+                {colType === "NUMBER" ? (
+                  <Hash className="w-4 h-4 inline mr-1 text-fuchsia-500" />
+                ) : (
+                  <Text className="w-4 h-4 inline mr-1 text-fuchsia-500" />
+                )}
+                {input}
+              </>
             )
-            }
+          )}
         </span>
       )}
     </div>
