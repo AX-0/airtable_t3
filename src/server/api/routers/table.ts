@@ -87,32 +87,30 @@ export const tableRouter = createTRPCRouter({
     if (existingCols.length === 0) throw new Error("No columns found for the table");
 
     // Create rows
-    const rowIds = [];
-    for (let i = 0; i < 1000; i++) {
-      const row = await ctx.db.insert(rows).values({
-        name: `Row ${i + 1}`,
-        tableId,
-      }).returning({ id: rows.id });
-
-      if (!row[0]) throw new Error("Failed to insert row");
-      rowIds.push(row[0].id);
-    }
+    const rowValues = Array.from({ length: 1000 }, (_, i) => ({
+      name: `Row ${i + 1}`,
+      tableId,
+    }));
+    
+    const insertedRows = await ctx.db.insert(rows).values(rowValues).returning({ id: rows.id });
+    const rowIds = insertedRows.map((r) => r.id);    
 
     // Create and populate cells
     const faker = await import("@faker-js/faker").then((m) => m.faker);
     const cellData = [];
-
+    
     for (const rowId of rowIds) {
       for (const col of existingCols) {
         const value =
           col.type === "NUMBER"
             ? faker.number.int({ min: 1, max: 100000 }).toString()
             : faker.person.fullName();
+    
         cellData.push({ rowId, columnId: col.id, value });
       }
     }
 
-    await ctx.db.insert(cells).values(cellData);
+    await ctx.db.insert(cells).values(cellData);    
   }),
 
   
