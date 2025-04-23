@@ -11,9 +11,9 @@ export function UtilPanel({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useClickAway(() => {
+  const ref = useClickAway<HTMLDivElement>(() => {
     setOpen(false);
-  }) as React.MutableRefObject<HTMLDivElement>;
+  });  
 
 
   return (
