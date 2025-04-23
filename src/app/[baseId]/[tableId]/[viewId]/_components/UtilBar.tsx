@@ -1,7 +1,34 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { api } from "~/trpc/react";
+import { ChevronDown, Filter, EyeOff, SortAsc, Plus } from "lucide-react";
 
-// export default function UtilBar
+export default function UtilBar() {
+  return (
+    <div className="flex items-center justify-between px-4 py-1 border-b bg-black shadow-sm text-sm">
+      <div className="flex items-center gap-2">
+        <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700">
+          <EyeOff className="w-4 h-4" />
+          Hide Fields
+          <ChevronDown className="w-4 h-4" />
+        </button>
+
+        <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700">
+          <Filter className="w-4 h-4" />
+          Filters
+          <ChevronDown className="w-4 h-4" />
+        </button>
+
+        <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700">
+          <SortAsc className="w-4 h-4" />
+          Sort
+          <ChevronDown className="w-4 h-4" />
+        </button>
+      </div>
+
+      <button className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition">
+        <Plus className="w-4 h-4" />
+        Create View
+      </button>
+    </div>
+  );
+}

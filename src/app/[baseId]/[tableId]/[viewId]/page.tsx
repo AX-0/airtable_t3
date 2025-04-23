@@ -1,5 +1,6 @@
 import TableView from "./TableView";
 import TableTabs from "./_components/TableTabs"
+import UtilBar from "./_components/UtilBar"
 
 import { api } from "~/trpc/react";
 
@@ -17,6 +18,8 @@ export default async function ViewPage({
   return (
     <>
     <TableTabs baseId={baseId} selectedTableId={tableId} viewId={viewId}/>
+
+    <UtilBar />
     
     {/* minus navbar height */}
     <div className="h-[calc(100vh-4rem)] w-full flex flex-col"> 
