@@ -22,7 +22,7 @@ export function VirtualTable({ tableId }: Props) {
     isFetchingNextPage,
     isLoading,
   } = api.table.getTableData.useInfiniteQuery(
-    { tableId: Number(tableId), limit: 100 },
+    { tableId: Number(tableId), limit: 1000 },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       refetchOnWindowFocus: false,
@@ -51,7 +51,7 @@ export function VirtualTable({ tableId }: Props) {
   useEffect(() => {
     const [lastItem] = rowVirtualizer.getVirtualItems().slice(-1);
     if (!lastItem) return;
-    if (lastItem.index >= rows.length - 1 && hasNextPage && !isFetchingNextPage) {
+    if (lastItem.index >= rows.length - 200 && hasNextPage && !isFetchingNextPage) {
       void fetchNextPage();
     }
   }, [rowVirtualizer.getVirtualItems(), rows.length, hasNextPage, isFetchingNextPage]);
