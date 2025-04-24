@@ -42,7 +42,9 @@ export default function BaseCard({ base }: BaseCardProps) {
     await deleteBase.mutateAsync({ id: base.id });
     setShowConfirm(false);
     router.refresh();
-  };  
+  };
+
+  const deleteIsPending = deleteBase.isPending;
 
   return (
     <>
@@ -79,19 +81,21 @@ export default function BaseCard({ base }: BaseCardProps) {
             </p>
 
             <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowConfirm(false)}
-                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-sm"
-              >
-                Cancel
-              </button>
+            <button
+              onClick={() => setShowConfirm(false)}
+              className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-sm"
+              disabled={deleteIsPending}
+            >
+              Cancel
+            </button>
 
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-sm"
-              >
-                Delete
-              </button>
+            <button
+              onClick={confirmDelete}
+              className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-sm disabled:opacity-50"
+              disabled={deleteIsPending}
+            >
+              {deleteIsPending ? "Deleting..." : "Delete"}
+            </button>
             </div>
           </div>
         </div>

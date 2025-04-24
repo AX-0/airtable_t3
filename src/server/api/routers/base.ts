@@ -9,6 +9,12 @@ import {
 import { bases, tables, cells, rows, columns, views } from "~/server/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
+    arr.slice(i * size, i * size + size)
+  );
+}
+
 export const baseRouter = createTRPCRouter({
     getBases: protectedProcedure.query(async ({ ctx }) => {
       const userId = ctx.session.user.id;
@@ -47,7 +53,7 @@ export const baseRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const baseId = input.id;
   
-      // Step 1: Find all tables under the base
+      // Find all tables under the base
       const tableRecords = await ctx.db
         .select({ id: tables.id })
         .from(tables)
@@ -55,41 +61,47 @@ export const baseRouter = createTRPCRouter({
   
       const tableIds = tableRecords.map((t) => t.id);
   
-      // Step 2: Delete all related data per table
+      // Delete all related data per table
       for (const tableId of tableIds) {
-        // Delete cells (must be before rows and columns)
         const rowIds = await ctx.db
-          .select({ id: rows.id })
-          .from(rows)
-          .where(eq(rows.tableId, tableId));
+        .select({ id: rows.id })
+        .from(rows)
+        .where(eq(rows.tableId, tableId))
+        .then((res) => res.map((r) => r.id));
+      
         const colIds = await ctx.db
           .select({ id: columns.id })
           .from(columns)
-          .where(eq(columns.tableId, tableId));
-  
-        await ctx.db
-          .delete(cells)
-          .where(
-            and(
-              inArray(cells.rowId, rowIds.map((r) => r.id)),
-              inArray(cells.columnId, colIds.map((c) => c.id))
-            )
-          );
-  
-        // Delete rows
-        await ctx.db.delete(rows).where(eq(rows.tableId, tableId));
-  
-        // Delete columns
-        await ctx.db.delete(columns).where(eq(columns.tableId, tableId));
-  
-        // Delete views
-        await ctx.db.delete(views).where(eq(views.tableId, tableId));
+          .where(eq(columns.tableId, tableId))
+          .then((res) => res.map((c) => c.id));
+        
+        for (const rowChunk of chunkArray(rowIds, 1000)) {
+          for (const colChunk of chunkArray(colIds, 100)) {
+            await ctx.db.delete(cells).where(
+              and(
+                inArray(cells.rowId, rowChunk),
+                inArray(cells.columnId, colChunk)
+              )
+            );
+          }
+        }
+    
+        for (const chunk of chunkArray(rowIds, 10000)) {
+          await ctx.db.delete(rows).where(inArray(rows.id, chunk));
+        }
+        
+        for (const chunk of chunkArray(colIds, 1000)) {
+          await ctx.db.delete(columns).where(inArray(columns.id, chunk));
+        }
+        
+        await ctx.db.delete(views).where(eq(views.tableId, tableId)); 
       }
   
-      // Step 3: Delete tables
-      await ctx.db.delete(tables).where(inArray(tables.id, tableIds));
+      for (const chunk of chunkArray(tableIds, 100)) {
+        await ctx.db.delete(tables).where(inArray(tables.id, chunk));
+      }
   
-      // Step 4: Delete the base itself
+      // Delete the base itself
       await ctx.db.delete(bases).where(eq(bases.id, baseId));
   
       return { success: true };

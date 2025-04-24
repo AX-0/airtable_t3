@@ -34,7 +34,15 @@ export default function TableTabs({ baseId, selectedTableId, viewId }: TableTabs
     },
   });
 
-  const isPending = add1kRows.isPending;
+  const add100kRows = api.table.add100k.useMutation({
+    onSuccess: async () => {
+      await utils.table.getTableData.invalidate();
+      router.refresh();
+    },
+  });
+
+  // const isPending = add1kRows.isPending;
+  const isPending = add100kRows.isPending;
 
   console.log(selectedTableId);
 
@@ -88,7 +96,8 @@ export default function TableTabs({ baseId, selectedTableId, viewId }: TableTabs
           </button>
 
           <button
-            onClick={() => add1kRows.mutate({tableId: Number(selectedTableId)})}
+            // onClick={() => add1kRows.mutate({tableId: Number(selectedTableId)})}
+            onClick={() => add100kRows.mutate({tableId: Number(selectedTableId)})}
             className="px-3 py-1.5 text-sm rounded-full text-blue-600 hover:bg-gray-200 transition cursor-pointer"
           >
             {isPending ? (

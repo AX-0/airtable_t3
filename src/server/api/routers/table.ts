@@ -8,6 +8,14 @@ import {
 } from "~/server/api/trpc";
 import { columns, rows, tables, views, cells } from "~/server/db/schema";
 
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
+    arr.slice(i * size, i * size + size)
+  );
+}
+
+const MAX_PARAMS = 65534; // tRPC max num of params
+
 export const tableRouter = createTRPCRouter({
   getTableData: protectedProcedure
   .input(z.object({ tableId: z.number(), cursor: z.number().optional(), limit: z.number().default(100) }))
@@ -110,8 +118,60 @@ export const tableRouter = createTRPCRouter({
       }
     }
 
-    await ctx.db.insert(cells).values(cellData);    
+    await ctx.db.insert(cells).values(cellData);
+    
+    return { success: true };
   }),
 
+  add100k: protectedProcedure
+  .input(z.object({ tableId: z.number() }))
+  .mutation(async ({ input, ctx }) => {
+    const { tableId } = input;
+
+    const existingCols = await ctx.db.query.columns.findMany({
+      where: (c, { eq }) => eq(c.tableId, tableId),
+    });
+
+    if (existingCols.length === 0) throw new Error("No columns found for the table");
+
+    // Create 100,000 rows
+    const rowValues = Array.from({ length: 100000 }, (_, i) => ({
+      name: `Row ${i + 1}`,
+      tableId,
+    }));
+
+    // Insert rows in chunks
+    const insertedRowsChunks: { id: number }[][] = [];
+    for (const rowChunk of chunkArray(rowValues, Math.floor(MAX_PARAMS / existingCols.length))) {
+      const chunkResult = await ctx.db.insert(rows).values(rowChunk).returning({ id: rows.id });
+      insertedRowsChunks.push(chunkResult);
+    }
+
+    // const insertedRows = await ctx.db.insert(rows).values(rowValues).returning({ id: rows.id });
+    const insertedRows = insertedRowsChunks.flat();
+    const rowIds = insertedRows.map((r) => r.id);
+
+    // Generate cells
+    const faker = await import("@faker-js/faker").then((m) => m.faker);
+    const cellData = [];
+
+    for (const rowId of rowIds) {
+      for (const col of existingCols) {
+        const value =
+          col.type === "NUMBER"
+            ? faker.number.int({ min: 1, max: 100000 }).toString()
+            : faker.person.fullName();
+
+        cellData.push({ rowId, columnId: col.id, value });
+      }
+    }
+
+    // Insert cells in chunks
+    for (const chunk of chunkArray(cellData, MAX_PARAMS/4)) {
+      await ctx.db.insert(cells).values(chunk);
+    }
+
+    return { success: true };
+  }),
   
 }) 
