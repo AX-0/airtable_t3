@@ -110,6 +110,7 @@ export function VirtualTable({ tableId, viewId }: Props) {
                   value={value}
                   tableId={tableId}
                   isFocused={focusedCell?.row === row.id && focusedCell?.col === col.id}
+                  viewId={viewId}
                   onTab={(direction) => {
                     const rowIndex = rows.findIndex((r) => r.id === row.id);
                     const colIndex = columns.findIndex((c) => c.id === col.id);

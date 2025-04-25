@@ -10,6 +10,7 @@ type Props = {
   tableId: number;
   isFocused: boolean;
   onTab: (direction: "next" | "prev", rowId: number, columnId: number) => void;
+  viewId: number;
 };
 
 export function EditableCell({
@@ -19,6 +20,7 @@ export function EditableCell({
   tableId,
   isFocused,
   onTab,
+  viewId,
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [input, setInput] = useState(value);
@@ -27,9 +29,15 @@ export function EditableCell({
 
   const updateCell = api.cell.update.useMutation({
     onMutate: ({ rowId, columnId, value }) => {
-      const prevData = utils.table.getTableData.getInfiniteData({ tableId });
+      const prevData = utils.table.getTableData.getInfiniteData({
+        tableId,
+        viewId: Number(viewId)
+      });
 
-      utils.table.getTableData.setInfiniteData({ tableId }, (old) => {
+      utils.table.getTableData.setInfiniteData({
+        tableId,
+        viewId: Number(viewId)
+      }, (old) => {
         if (!old) return old;
         return {
           ...old,
@@ -48,7 +56,10 @@ export function EditableCell({
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.prevData) {
-        utils.table.getTableData.setInfiniteData({ tableId }, ctx.prevData);
+        utils.table.getTableData.setInfiniteData({
+          tableId,
+          viewId: Number(viewId)
+        }, ctx.prevData);
       }
     },
     onSettled: () => {
