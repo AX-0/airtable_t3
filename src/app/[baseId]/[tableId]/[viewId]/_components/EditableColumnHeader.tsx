@@ -9,9 +9,10 @@ type Props = {
   name?: string;
   tableId: number;
   isAddColumn?: boolean;
+  viewId: number;
 };
 
-export default function EditableColumnHeader({ columnId, name, tableId, isAddColumn }: Props) {
+export default function EditableColumnHeader({ columnId, name, tableId, isAddColumn, viewId }: Props) {
   const [editing, setEditing] = useState(isAddColumn ?? false);
   const [input, setInput] = useState(() => (isAddColumn ? "" : name ?? ""));
   const [type, setType] = useState<"TEXT" | "NUMBER">("TEXT");
@@ -31,8 +32,14 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
 
   const updateColumn = api.column.updateColumnName.useMutation({
     onMutate: async ({ columnId, name, tableId }) => {
-      const prevData = utils.table.getTableData.getInfiniteData({ tableId });
-      utils.table.getTableData.setInfiniteData({ tableId }, (old) => {
+      const prevData = utils.table.getTableData.getInfiniteData({
+        tableId,
+        viewId: Number(viewId)
+      });
+      utils.table.getTableData.setInfiniteData({
+        tableId,
+        viewId: Number(viewId)
+      }, (old) => {
         if (!old) return old;
         return {
           ...old,
@@ -51,7 +58,10 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.prevData) {
-        utils.table.getTableData.setInfiniteData({ tableId }, ctx.prevData);
+        utils.table.getTableData.setInfiniteData({
+          tableId,
+          viewId: Number(viewId)
+        }, ctx.prevData);
       }
     },
     onSettled: () => {

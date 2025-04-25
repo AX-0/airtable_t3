@@ -9,6 +9,7 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 import { columns, rows, tables, views, cells } from "~/server/db/schema";
+import { and, eq, gt, ilike, inArray, isNotNull, isNull, lt, ne, not, or } from "drizzle-orm";
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
   return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
@@ -20,22 +21,92 @@ const MAX_PARAMS = 65534; // tRPC max num of params
 
 export const tableRouter = createTRPCRouter({
   getTableData: protectedProcedure
-  .input(z.object({ tableId: z.number(), cursor: z.number().optional(), limit: z.number().default(100) }))
+  .input(z.object({
+    tableId: z.number(),
+    cursor: z.number().optional(),
+    limit: z.number().default(100),
+    viewId: z.number(),    
+  }))
   .query(async ({ input, ctx }) => {
+    const view = await ctx.db.query.views.findFirst({
+      where: (v, { eq }) => eq(v.id, input.viewId),
+    });
+    
+    if (!view) {
+      throw new Error("View not found");
+    }
+    
+    const filters = (view.filters ?? []) as {
+      columnId: number;
+      operator: string;
+      value: string;
+    }[];
+    const sorts = (view.sorts ?? []) as { // TODO
+      columnId: number;
+      direction: "asc" | "desc";
+    }[];
+
     const columnsResult = await db.query.columns.findMany({
       where: ((c, { eq }) => eq(c.tableId, input.tableId)),
       orderBy: (c, { asc }) => asc(c.id),
     });
 
-    const rowsResult = await db.query.rows.findMany({
-      where: (r, { eq, gt }) =>
-        input.cursor ? eq(r.tableId, input.tableId) && gt(r.id, input.cursor) : eq(r.tableId, input.tableId),
+    let filteredRowIds: number[] | null = null;
+
+    if (filters.length > 0) {
+      const cellConditions = filters.map((filter) => {
+        const col = cells.columnId;
+        const val = cells.value;
+        switch (filter.operator) {
+          case "equals":
+            return and(eq(col, filter.columnId), eq(val, filter.value));
+          case "notEquals":
+            return and(eq(col, filter.columnId), ne(val, filter.value));
+          case "contains":
+            return and(eq(col, filter.columnId), ilike(val, `%${filter.value}%`));
+          case "notContains":
+            return and(eq(col, filter.columnId), not(ilike(val, `%${filter.value}%`)));
+          case "greaterThan":
+            return and(eq(col, filter.columnId), gt(val, filter.value));
+          case "lessThan":
+            return and(eq(col, filter.columnId), lt(val, filter.value));
+          case "isEmpty":
+            return and(eq(col, filter.columnId), or(isNull(val), eq(val, '')));
+          case "isNotEmpty":
+            return and(eq(col, filter.columnId), and(isNotNull(val), ne(val, '')));
+          default:
+            return undefined;
+        }
+        
+      }).filter(Boolean);
+    
+      const filteredCells = await ctx.db
+        .selectDistinct({ rowId: cells.rowId })
+        .from(cells)
+        .where(and(...cellConditions));
+    
+      filteredRowIds = filteredCells.map(c => c.rowId);
+    }
+
+    const rowWhereClause = input.cursor
+    ? and(
+        eq(rows.tableId, input.tableId),
+        gt(rows.id, input.cursor),
+        filteredRowIds ? inArray(rows.id, filteredRowIds) : undefined
+      )
+    : and(
+        eq(rows.tableId, input.tableId),
+        filteredRowIds ? inArray(rows.id, filteredRowIds) : undefined
+      );
+  
+    const rowsResult = await ctx.db.query.rows.findMany({
+      where: rowWhereClause,
       orderBy: (r, { asc }) => asc(r.id),
       limit: input.limit,
     });
 
-    const cellsResult = await db.query.cells.findMany({
-      where: (c, { inArray }) => inArray(c.rowId, rowsResult.map((r) => r.id)),
+    const cellsResult = await ctx.db.query.cells.findMany({
+      where: (c, { inArray }) => inArray(c.rowId, rowsResult.map(r => r.id)),
     });
 
     return {

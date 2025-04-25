@@ -8,9 +8,10 @@ import EditableColumnHeader from "./EditableColumnHeader";
 
 interface Props {
   tableId: number;
+  viewId: number;
 }
 
-export function VirtualTable({ tableId }: Props) {
+export function VirtualTable({ tableId, viewId }: Props) {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const [focusedCell, setFocusedCell] = useState<{ row: number; col: number } | null>(null);
@@ -22,7 +23,7 @@ export function VirtualTable({ tableId }: Props) {
     isFetchingNextPage,
     isLoading,
   } = api.table.getTableData.useInfiniteQuery(
-    { tableId: Number(tableId), limit: 1000 },
+    { tableId: Number(tableId), limit: 1000, viewId: Number(viewId) },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       refetchOnWindowFocus: false,
@@ -73,10 +74,11 @@ export function VirtualTable({ tableId }: Props) {
               columnId={col.id}
               name={col.name}
               tableId={tableId}
+              viewId={viewId}
             />
           ))}
 
-          <EditableColumnHeader tableId={tableId} isAddColumn />
+          <EditableColumnHeader tableId={tableId} viewId={viewId} isAddColumn />
 
         </div>
 
