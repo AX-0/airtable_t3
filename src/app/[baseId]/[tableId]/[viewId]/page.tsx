@@ -19,7 +19,7 @@ export default async function ViewPage({
     <>
     <TableTabs baseId={baseId} selectedTableId={tableId} viewId={viewId}/>
 
-    <UtilBar />
+    <UtilBar baseId={baseId} tableId={tableId} viewId={viewId}/>
     
     {/* minus navbar height */}
     <div className="h-[calc(100vh-4rem)] w-full flex flex-col"> 
