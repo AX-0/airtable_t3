@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { db } from "~/server/db";
 
+import pLimit from "p-limit";
+
+const limit = pLimit(5);
+
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -52,58 +56,78 @@ export const baseRouter = createTRPCRouter({
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const baseId = input.id;
-  
+
       // Find all tables under the base
       const tableRecords = await ctx.db
         .select({ id: tables.id })
         .from(tables)
         .where(eq(tables.baseId, baseId));
-  
+
       const tableIds = tableRecords.map((t) => t.id);
-  
+
       // Delete all related data per table
       for (const tableId of tableIds) {
         const rowIds = await ctx.db
-        .select({ id: rows.id })
-        .from(rows)
-        .where(eq(rows.tableId, tableId))
-        .then((res) => res.map((r) => r.id));
-      
+          .select({ id: rows.id })
+          .from(rows)
+          .where(eq(rows.tableId, tableId))
+          .then((res) => res.map((r) => r.id));
+
         const colIds = await ctx.db
           .select({ id: columns.id })
           .from(columns)
           .where(eq(columns.tableId, tableId))
           .then((res) => res.map((c) => c.id));
-        
-        for (const rowChunk of chunkArray(rowIds, 1000)) {
-          for (const colChunk of chunkArray(colIds, 100)) {
-            await ctx.db.delete(cells).where(
-              and(
-                inArray(cells.rowId, rowChunk),
-                inArray(cells.columnId, colChunk)
+
+        // Delete cells in chunks concurrently
+        console.time("Delete Cells")
+        await Promise.all(
+          chunkArray(rowIds, 2000).flatMap((rowChunk) =>
+            chunkArray(colIds, 100).map((colChunk) =>
+              limit(() =>
+                ctx.db.delete(cells).where(
+                  and(
+                    inArray(cells.rowId, rowChunk),
+                    inArray(cells.columnId, colChunk)
+                  )
+                )
               )
-            );
-          }
-        }
-    
-        for (const chunk of chunkArray(rowIds, 10000)) {
-          await ctx.db.delete(rows).where(inArray(rows.id, chunk));
-        }
-        
-        for (const chunk of chunkArray(colIds, 1000)) {
-          await ctx.db.delete(columns).where(inArray(columns.id, chunk));
-        }
-        
-        await ctx.db.delete(views).where(eq(views.tableId, tableId)); 
+            )
+          )
+        );
+        console.timeEnd("Delete Cells")
+
+        console.time("Delete Rows")
+        // Delete rows in chunks concurrently
+        await Promise.all(
+          chunkArray(rowIds, 2000).map((chunk) =>
+            limit(() => ctx.db.delete(rows).where(inArray(rows.id, chunk)))
+          )
+        );
+
+        console.timeEnd("Delete Rows")
+
+        // Delete columns in chunks concurrently
+        await Promise.all(
+          chunkArray(colIds, 1000).map((chunk) =>
+            limit(() => ctx.db.delete(columns).where(inArray(columns.id, chunk)))
+          )
+        );
+
+        // Delete views
+        await limit(() => ctx.db.delete(views).where(eq(views.tableId, tableId)));
       }
-  
-      for (const chunk of chunkArray(tableIds, 100)) {
-        await ctx.db.delete(tables).where(inArray(tables.id, chunk));
-      }
-  
-      // Delete the base itself
+
+      // Delete tables in chunks concurrently
+      await Promise.all(
+        chunkArray(tableIds, 100).map((chunk) =>
+          limit(() => ctx.db.delete(tables).where(inArray(tables.id, chunk)))
+        )
+      );
+
+      // Delete the base
       await ctx.db.delete(bases).where(eq(bases.id, baseId));
-  
+
       return { success: true };
     }),
 
