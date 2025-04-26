@@ -39,4 +39,17 @@ export const columnRouter = createTRPCRouter({
       if (!col) throw new Error("Column not found");
       return col.type;
     }),
+
+    getAllColNameId: protectedProcedure
+    .input(z.object({tableId: z.number()}))
+    .query(async ({ input, ctx }) => {
+      return ctx.db.query.columns.findMany({
+        where: (cols, { eq }) => eq(cols.tableId, input.tableId),
+        columns: {
+          id: true,
+          name: true,
+          type: true,
+        },
+      });
+    }),
 }) 
