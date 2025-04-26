@@ -6,18 +6,22 @@ import { api } from "~/trpc/react";
 import { useState } from "react";
 
 type Props = {
-    tableId: number;
-    viewId: number;
+  tableId: number;
+  viewId: number;
+};
+
+type FilterCondition = {
+  columnId: number | null;
+  operator: string;
+  value: string;
 };
 
 export default function FilterPanel({ tableId, viewId }: Props) {
     const { data: columns = [], isLoading } = api.column.getAllColNameId.useQuery({ tableId: Number(tableId) });
 
-    const [selectedColumnId, setSelectedColumnId] = useState<number | null>(null);
-    const [selectedOperator, setSelectedOperator] = useState<string>("IS_NOT_EMPTY");
-    const [filterValue, setFilterValue] = useState("");
-
-    const selectedColumn = columns.find((col) => col.id === selectedColumnId);
+    const [filters, setFilters] = useState<FilterCondition[]>([
+    { columnId: null, operator: "IS_NOT_EMPTY", value: "" },
+    ]);
 
     const textOperators = [
     { value: "IS_NOT_EMPTY", label: "is not empty" },
@@ -47,59 +51,99 @@ export default function FilterPanel({ tableId, viewId }: Props) {
         </div>
         }
     >
-        <div className="text-sm text-gray-700 space-y-2">
-        <div className="font-semibold">In this view, show records</div>
+        <div className="text-sm text-gray-700 space-y-4">
+            <div className="font-semibold">In this view, show records</div>
 
-        <div className="flex items-center gap-2">
-            where
+            {/* Render each condition */}
+            {filters.map((filter, index) => {
+                const selectedColumn = columns.find((col) => col.id === filter.columnId);
 
-            {/* Column select */}
-            <select
-                className="border rounded px-2 py-1"
-                value={selectedColumnId ?? ""}
-                onChange={(e) => setSelectedColumnId(Number(e.target.value))}
-            >
-            <option value="" disabled>Select column</option>
-            {columns.map((col) => (
-                <option key={col.id} value={col.id}>
-                {col.name}
-                </option>
-            ))}
-            </select>
+                return (
+                <div key={index} className="flex items-center gap-2">
+                    where
 
-            {/* Operator select */}
-            <select
-                className="border rounded px-2 py-1"
-                value={selectedOperator}
-                onChange={(e) => setSelectedOperator(e.target.value)}
-                disabled={!selectedColumnId}
-            >
-            {getOperatorsForType(selectedColumn?.type).map((op) => (
-                <option key={op.value} value={op.value}>
-                {op.label}
-                </option>
-            ))}
-            </select>
+                    {/* Column select */}
+                    <select
+                        className="border rounded px-2 py-1"
+                        value={filter.columnId ?? ""}
+                        onChange={(e) => {
+                            const newFilters = [...filters];
+                            if (newFilters[index]) {
+                                newFilters[index].columnId = Number(e.target.value);
+                            }
+                            setFilters(newFilters);
+                        }}
+                    >
+                    <option value="" disabled>Select column</option>
+                        {columns.map((col) => (
+                            <option key={col.id} value={col.id}>
+                            {col.name}
+                            </option>
+                        ))}
+                    </select>
 
-            {/* Value input */}
-            <input
-                className="border rounded px-2 py-1 flex-1 w-full"
-                placeholder="Enter a value"
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
-                disabled={!selectedColumnId}
-            />
+                    {/* Operator select */}
+                    <select
+                        className="border rounded px-2 py-1"
+                        value={filter.operator}
+                        onChange={(e) => {
+                            const newFilters = [...filters];
+                            if (newFilters[index]) {
+                                newFilters[index].columnId = Number(e.target.value);
+                            }
+                            setFilters(newFilters);
+                        }}
+                        disabled={!filter.columnId}
+                    >
+                    {getOperatorsForType(selectedColumn?.type).map((op) => (
+                        <option key={op.value} value={op.value}>
+                        {op.label}
+                        </option>
+                    ))}
+                    </select>
 
-            <button className="text-red-600 cursor-pointer">
-                <Trash />
-            </button>
-        </div>
+                    {/* Input */}
+                    <input
+                        className="border rounded px-2 py-1 flex-1 w-full"
+                        placeholder="Enter a value"
+                        value={filter.value}
+                        onChange={(e) => {
+                            const newFilters = [...filters];
+                            if (newFilters[index]) {
+                                newFilters[index].columnId = Number(e.target.value);
+                            }
+                            setFilters(newFilters);
+                        }}
+                        disabled={!filter.columnId}
+                    />
 
-        <div className="flex justify-between pt-2">
-            <button className="text-blue-600 text-sm cursor-pointer">
-            + Add condition
-            </button>
-        </div>
+                    {/* Trash button */}
+                    <button
+                        className="text-red-600 cursor-pointer"
+                        onClick={() => {
+                            setFilters(filters.filter((_, i) => i !== index));
+                        }}
+                    >
+                        <Trash className="w-4 h-4" />
+                    </button>
+                </div>
+                );
+            })}
+
+            {/* Add condition button */}
+            <div className="flex justify-between pt-2">
+                <button
+                    className="text-blue-600 text-sm cursor-pointer"
+                    onClick={() =>
+                        setFilters((prev) => [
+                        ...prev,
+                        { columnId: null, operator: "IS_NOT_EMPTY", value: "" },
+                        ])
+                    }
+                >
+                    + Add condition
+                </button>
+            </div>
         </div>
     </UtilPanel>
     );
