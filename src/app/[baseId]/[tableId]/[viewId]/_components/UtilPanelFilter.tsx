@@ -19,6 +19,8 @@ type FilterCondition = {
 export default function FilterPanel({ tableId, viewId }: Props) {
     const { data: columns = [], isLoading } = api.column.getAllColNameId.useQuery({ tableId: Number(tableId) });
 
+    const utils = api.useUtils();
+
     const [filters, setFilters] = useState<FilterCondition[]>([
     { columnId: null, operator: "IS_NOT_EMPTY", value: "" },
     ]);
@@ -40,6 +42,12 @@ export default function FilterPanel({ tableId, viewId }: Props) {
     if (colType === "NUMBER") return numberOperators;
     return textOperators;
     };
+
+    const updateViewFilters = api.view.updateViewFilters.useMutation({
+        onSuccess: () => {
+            void utils.table.getTableData.invalidate();
+        }
+    });
 
     return (
     <UtilPanel
@@ -110,9 +118,18 @@ export default function FilterPanel({ tableId, viewId }: Props) {
                         onChange={(e) => {
                             const newFilters = [...filters];
                             if (newFilters[index]) {
-                                newFilters[index].columnId = Number(e.target.value);
+                              newFilters[index].value = e.target.value; // ✅ correct
                             }
                             setFilters(newFilters);
+                          
+                            updateViewFilters.mutate({
+                              viewId: Number(viewId),
+                              filters: newFilters.filter(f => f.columnId !== null) as {
+                                columnId: number;
+                                operator: string;
+                                value: string;
+                              }[],
+                            });
                         }}
                         disabled={!filter.columnId}
                     />

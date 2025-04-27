@@ -7,6 +7,7 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 import { views } from "~/server/db/schema";
+import { eq } from "drizzle-orm";
 
 export const viewRouter = createTRPCRouter({
     getFirstView: protectedProcedure
@@ -51,6 +52,22 @@ export const viewRouter = createTRPCRouter({
       }
       
       return newView;
+    }),
+
+    updateViewFilters: protectedProcedure
+    .input(z.object({
+      viewId: z.number(),
+      filters: z.array(z.object({
+        columnId: z.number(),
+        operator: z.string(),
+        value: z.string(),
+      })),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      await ctx.db.update(views)
+        .set({ filters: input.filters })
+        .where(eq(views.id, input.viewId));
+      return { success: true };
     }),
   
 }) 
