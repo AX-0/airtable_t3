@@ -33,8 +33,8 @@ export default function UtilBar({ baseId, tableId, viewId }: Props) {
     });
 
     const createRow = api.row.createRow.useMutation({
-        onSuccess: () => {
-          utils.table.getTableData.invalidate();
+        onSuccess: async () => {
+          await utils.table.getTableData.invalidate();
         },
     });
 
