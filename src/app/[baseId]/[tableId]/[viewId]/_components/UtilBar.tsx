@@ -32,8 +32,14 @@ export default function UtilBar({ baseId, tableId, viewId }: Props) {
         },
     });
 
+    const createRow = api.row.createRow.useMutation({
+        onSuccess: () => {
+          utils.table.getTableData.invalidate();
+        },
+    });
+
     return (
-        <div className="flex items-center justify-between px-4 py-1 border-b bg-black shadow-sm text-sm">
+        <div className="flex items-center justify-between h-12 px-4 py-1 border-b bg-black shadow-sm text-sm">
             <div className="flex items-center gap-2">
                 <select 
                     className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700" 
@@ -79,6 +85,16 @@ export default function UtilBar({ baseId, tableId, viewId }: Props) {
                 <ChevronDown className="w-4 h-4" />
                 </button>
             </div>
+
+
+            <div className="flex items-center gap-2">
+            <button
+                onClick={() => createRow.mutate({ tableId: Number(tableId) })}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition"
+                >
+                <Plus className="w-4 h-4" />
+                Create Row
+            </button>
 
             {showInput ? (
                 <div className="flex items-center gap-2">
@@ -130,6 +146,7 @@ export default function UtilBar({ baseId, tableId, viewId }: Props) {
                     Create View
                 </button>
             )}
+            </div>
 
         </div>
     );

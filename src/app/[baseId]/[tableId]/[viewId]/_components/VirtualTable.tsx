@@ -61,7 +61,7 @@ export function VirtualTable({ tableId, viewId }: Props) {
 
   return (
     // minus nav bar height
-    <div ref={parentRef} className="overflow-auto h-[calc(100vh-4rem)] w-full border-t">
+    <div ref={parentRef} className="overflow-auto h-[calc(100vh-9.5rem)] w-full border-t">
       <div
         style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}
       >
