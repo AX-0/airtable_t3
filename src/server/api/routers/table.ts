@@ -120,38 +120,71 @@ export const tableRouter = createTRPCRouter({
   createTableAndView: protectedProcedure
   .input(z.object({ baseId: z.number(), name: z.string().min(1) }))
   .mutation(async ({ input, ctx }) => {
-    const table = await ctx.db.insert(tables).values({
-      name: input.name,
-      baseId: input.baseId,
-    }).returning({ id: tables.id });
+      // Create table
+      const table = await ctx.db.insert(tables).values({
+        name: "New Table",
+        baseId: input.baseId,
+      }).returning({ id: tables.id });
+  
+      const tableId = table[0]?.id;
+      if (!tableId) throw new Error("Failed to create table");
+  
+      // Create view
+      const view = await ctx.db.insert(views).values({
+        name: "Default View",
+        tableId,
+        filters: [],
+        sorts: [],
+        hiddenColumns: [],
+        searchTerm: "",
+      }).returning({ id:views.id })
+      const viewId = view[0]?.id;
+      if (!viewId) throw new Error("Failed to create view");
+  
+      // Create columns (text, text, number)
+      const colMeta: { id: number; type: "TEXT" | "NUMBER" }[] = [];
+      const types: ("TEXT" | "NUMBER")[] = ["TEXT", "TEXT", "NUMBER"];
 
-    const tableId = table[0]?.id;
-    if (!tableId) throw new Error("Failed to create table");
+      for (let i = 1; i <= 6; i++) {
+        const type = types[(i - 1) % 3]!;
+        const col = await ctx.db.insert(columns).values({
+          name: `col_${i}`,
+          tableId,
+          type,
+        }).returning({ id: columns.id });
 
-    // Create a default view
-    const view = await ctx.db.insert(views).values({
-      name: "Default View",
-      tableId,
-      filters: [],
-      sorts: [],
-      hiddenColumns: [],
-      searchTerm: "",
-    }).returning({ id: views.id });
+        if (!col[0]) throw new Error("Failed to insert column");
+        colMeta.push({ id: col[0].id, type });
+      }
 
-    const viewId = view[0]?.id;
-    if (!viewId) throw new Error("Failed to create view");
+      // Create rows
+      const rowIds: number[] = [];
+      for (let i = 0; i < 10; i++) {
+        const row = await ctx.db.insert(rows).values({
+          name: `Row ${i + 1}`,
+          tableId,
+        }).returning({ id: rows.id });
 
-    // Create a col
-    const col = await ctx.db.insert(columns).values({
-      name: `col_1`,
-      tableId,
-    }).returning({ id: columns.id });
+        if (!row[0]) throw new Error("Failed to insert row");
+        rowIds.push(row[0].id);
+      }
 
-    // Create a row
-    const row = await ctx.db.insert(rows).values({
-      name: `Row 1`,
-      tableId,
-    }).returning({ id: rows.id });
+      // Generate cells
+      const faker = await import("@faker-js/faker").then((m) => m.faker);
+      const cellData = [];
+
+      for (const rowId of rowIds) {
+        for (const col of colMeta) {
+          const value =
+            col.type === "NUMBER"
+              ? faker.number.int({ min: 1, max: 100000 }).toString()
+              : faker.person.fullName();
+
+          cellData.push({ rowId, columnId: col.id, value });
+        }
+      }
+
+      await ctx.db.insert(cells).values(cellData);
 
     return { tableId, viewId };
   }),

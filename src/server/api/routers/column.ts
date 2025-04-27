@@ -21,11 +21,34 @@ export const columnRouter = createTRPCRouter({
     createColumn: protectedProcedure
     .input(z.object({name: z.string(), tableId: z.number(), type: z.enum(["TEXT", "NUMBER"])}))
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.insert(columns).values({
-        name: input.name,
-        tableId: input.tableId,
-        type: input.type,
-      })
+      const { name, tableId, type } = input;
+
+      const insertedCols = await ctx.db.insert(columns).values({
+        name,
+        tableId,
+        type,
+      }).returning({ id: columns.id });
+  
+      const columnId = insertedCols[0]?.id;
+      if (!columnId) {
+        throw new Error("Failed to create column");
+      }
+
+      const rowsInTable = await ctx.db.query.rows.findMany({
+        where: (r, { eq }) => eq(r.tableId, tableId),
+      });
+
+      if (rowsInTable.length > 0) {
+        const newCells = rowsInTable.map((row) => ({
+          rowId: row.id,
+          columnId,
+          value: "",
+        }));
+  
+        await ctx.db.insert(cells).values(newCells);
+      }
+
+      return { success: true, columnId };
     }),
 
     getType: protectedProcedure

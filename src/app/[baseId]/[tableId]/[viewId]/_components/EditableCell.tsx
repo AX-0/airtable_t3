@@ -76,6 +76,7 @@ export function EditableCell({
 
   const handleSave = () => {
     setEditing(false);
+    console.log(input + " : " + value);
     if (input !== value) {
       updateCell.mutate({ rowId, columnId, value: input, tableId: Number(tableId) });
     }

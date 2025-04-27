@@ -118,7 +118,7 @@ export default function FilterPanel({ tableId, viewId }: Props) {
                         onChange={(e) => {
                             const newFilters = [...filters];
                             if (newFilters[index]) {
-                              newFilters[index].value = e.target.value; // ✅ correct
+                              newFilters[index].value = e.target.value;
                             }
                             setFilters(newFilters);
                           
