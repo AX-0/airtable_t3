@@ -53,6 +53,7 @@ export const tableRouter = createTRPCRouter({
 
     let filteredRowIds: number[] | null = null;
 
+    console.log("hello3");
     if (filters.length > 0) {
       const matchingRowIdSets: Set<number>[] = [];
     
@@ -104,27 +105,88 @@ export const tableRouter = createTRPCRouter({
       }
     }
     
+    console.log("hello2");
+    let rowWhereClause;
 
-    const rowWhereClause = input.cursor
-    ? and(
+    if (input.cursor) {
+      rowWhereClause = and(
         eq(rows.tableId, input.tableId),
         gt(rows.id, input.cursor),
-        filteredRowIds ? inArray(rows.id, filteredRowIds) : undefined
-      )
-    : and(
-        eq(rows.tableId, input.tableId),
-        filteredRowIds ? inArray(rows.id, filteredRowIds) : undefined
+        filteredRowIds
+          ? or(
+              ...chunkArray(filteredRowIds, 1000).map((chunk) =>
+                inArray(rows.id, chunk)
+              )
+            )
+          : undefined
       );
+    } else {
+      rowWhereClause = and(
+        eq(rows.tableId, input.tableId),
+        filteredRowIds
+          ? or(
+              ...chunkArray(filteredRowIds, 1000).map((chunk) =>
+                inArray(rows.id, chunk)
+              )
+            )
+          : undefined
+      );
+    }
   
-    const rowsResult = await ctx.db.query.rows.findMany({
-      where: rowWhereClause,
-      orderBy: (r, { asc }) => asc(r.id),
-      limit: input.limit,
-    });
+    let rowsResult = [];
 
-    const cellsResult = await ctx.db.query.cells.findMany({
-      where: (c, { inArray }) => inArray(c.rowId, rowsResult.map(r => r.id)),
-    });
+    if (filteredRowIds && filteredRowIds.length > 0) {
+      const rowChunks = chunkArray(filteredRowIds, 1000);
+    
+      const partials = await Promise.all(
+        rowChunks.map(chunk =>
+          ctx.db.query.rows.findMany({
+            where: and(
+              eq(rows.tableId, input.tableId),
+              inArray(rows.id, chunk),
+              input.cursor ? gt(rows.id, input.cursor) : undefined
+            ),
+            orderBy: (r, { asc }) => asc(r.id),
+            limit: input.limit,
+          })
+        )
+      );
+      rowsResult = partials.flat();
+    } else {
+      // If no filtering
+      rowsResult = await ctx.db.query.rows.findMany({
+        where: input.cursor
+          ? and(eq(rows.tableId, input.tableId), gt(rows.id, input.cursor))
+          : eq(rows.tableId, input.tableId),
+        orderBy: (r, { asc }) => asc(r.id),
+        limit: input.limit,
+      });
+    }    
+
+    console.log("hello1");
+    const allRowIds = rowsResult.map(r => r.id);
+
+    let cellsResult: { id: number; value: string; rowId: number; columnId: number; }[] = [];
+    
+    if (allRowIds.length > 0) {
+      const rowIdChunks = chunkArray(allRowIds, 1000); // Same chunk size
+    
+      // for (const chunk of rowIdChunks) {
+      //   const partialCells = await ctx.db.query.cells.findMany({
+      //     where: (c, { inArray }) => inArray(c.rowId, chunk),
+      //   });
+      //   cellsResult.push(...partialCells);
+      // }
+
+      const partials = await Promise.all(
+        rowIdChunks.map(chunk =>
+          ctx.db.query.cells.findMany({
+            where: (c, { inArray }) => inArray(c.rowId, chunk),
+          })
+        )
+      );
+      cellsResult = partials.flat();      
+    }
 
     return {
       columns: columnsResult,
