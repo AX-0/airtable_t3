@@ -54,7 +54,7 @@ export const tableRouter = createTRPCRouter({
     let filteredRowIds: number[] | null = null;
 
     if (filters.length > 0) {
-      let matchingRowIdSets: Set<number>[] = [];
+      const matchingRowIdSets: Set<number>[] = [];
     
       for (const filter of filters) {
         const col = cells.columnId;

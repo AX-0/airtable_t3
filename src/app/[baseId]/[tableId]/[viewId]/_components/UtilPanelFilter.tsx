@@ -187,7 +187,7 @@ export default function FilterPanel({ tableId, viewId }: Props) {
                         className="text-red-600 cursor-pointer"
                         onClick={() => {
                             const filterToDelete = filters[index];
-                            if (!filterToDelete || filterToDelete.columnId === null) return;
+                            if (filterToDelete?.columnId == null) return;
 
                             deleteFilter.mutate({
                                 viewId: Number(viewId),
