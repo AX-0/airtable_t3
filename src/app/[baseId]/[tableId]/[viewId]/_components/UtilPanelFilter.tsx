@@ -3,7 +3,7 @@
 import { ChevronDown, Filter, Trash } from "lucide-react";
 import { UtilPanel } from "./UtilPanel";
 import { api } from "~/trpc/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Props = {
   tableId: number;
@@ -17,13 +17,19 @@ type FilterCondition = {
 };
 
 export default function FilterPanel({ tableId, viewId }: Props) {
-    const { data: columns = [], isLoading } = api.column.getAllColNameId.useQuery({ tableId: Number(tableId) });
+    const { data: columns = [], isLoading: columnsLoading } = api.column.getAllColNameId.useQuery({ tableId: Number(tableId) });
+
+    const { data: fetchedFilters = [], isLoading: filtersLoading } = api.view.getFilters.useQuery(
+        { viewId: Number(viewId) }
+    ) as { data: FilterCondition[]; isLoading: boolean };
 
     const utils = api.useUtils();
-
-    const [filters, setFilters] = useState<FilterCondition[]>([
-    { columnId: null, operator: "IS_NOT_EMPTY", value: "" },
-    ]);
+  
+    const [filters, setFilters] = useState<FilterCondition[]>([]);
+  
+    useEffect(() => {
+      setFilters(fetchedFilters);
+    }, [fetchedFilters]);
 
     const textOperators = [
     { value: "IS_NOT_EMPTY", label: "is not empty" },
@@ -46,6 +52,13 @@ export default function FilterPanel({ tableId, viewId }: Props) {
     const updateViewFilters = api.view.updateViewFilters.useMutation({
         onSuccess: () => {
             void utils.table.getTableData.invalidate();
+        }
+    });
+
+    const deleteFilter = api.view.deleteFilter.useMutation({
+        onSuccess: () => {
+          void utils.table.getTableData.invalidate();
+          void utils.view.getFilters.invalidate();
         }
     });
 
@@ -80,6 +93,18 @@ export default function FilterPanel({ tableId, viewId }: Props) {
                                 newFilters[index].columnId = Number(e.target.value);
                             }
                             setFilters(newFilters);
+                            
+                            if(filter.operator === "IS_EMPTY" || filter.operator === "IS_NOT_EMPTY" ) {
+                                filter.value = "";
+                                updateViewFilters.mutate({
+                                    viewId: Number(viewId),
+                                    filters: newFilters.filter(f => f.columnId !== null) as {
+                                        columnId: number;
+                                        operator: string;
+                                        value: string;
+                                    }[],
+                                });
+                            }
                         }}
                     >
                     <option value="" disabled>Select column</option>
@@ -97,11 +122,27 @@ export default function FilterPanel({ tableId, viewId }: Props) {
                         onChange={(e) => {
                             const newFilters = [...filters];
                             if (newFilters[index]) {
-                                newFilters[index].columnId = Number(e.target.value);
+                                newFilters[index].operator = e.target.value;
+
+                                if (e.target.value === "IS_EMPTY" || e.target.value === "IS_NOT_EMPTY") {
+                                newFilters[index].value = "";
+                                }
                             }
                             setFilters(newFilters);
+
+                            // console.log(newFilters);
+
+                            updateViewFilters.mutate({
+                                viewId: Number(viewId),
+                                filters: newFilters.filter(f => f.columnId !== null) as {
+                                columnId: number;
+                                operator: string;
+                                value: string;
+                                }[],
+                            });
                         }}
-                        disabled={!filter.columnId}
+                          
+                        // disabled={!filter.columnId}
                     >
                     {getOperatorsForType(selectedColumn?.type).map((op) => (
                         <option key={op.value} value={op.value}>
@@ -118,27 +159,46 @@ export default function FilterPanel({ tableId, viewId }: Props) {
                         onChange={(e) => {
                             const newFilters = [...filters];
                             if (newFilters[index]) {
-                              newFilters[index].value = e.target.value;
+                            newFilters[index].value = e.target.value;
                             }
                             setFilters(newFilters);
-                          
+
+                            // console.log(newFilters);
                             updateViewFilters.mutate({
-                              viewId: Number(viewId),
-                              filters: newFilters.filter(f => f.columnId !== null) as {
-                                columnId: number;
-                                operator: string;
-                                value: string;
-                              }[],
+                                viewId: Number(viewId),
+                                filters: newFilters
+                                    .filter(f => f.columnId !== null)
+                                    .map(f => ({
+                                        columnId: Number(f.columnId),
+                                        operator: f.operator,
+                                        value: f.value,
+                                    })),
                             });
                         }}
-                        disabled={!filter.columnId}
+                        disabled={
+                            !filter.columnId ||
+                            filter.operator === "IS_EMPTY" || 
+                            filter.operator === "IS_NOT_EMPTY"
+                        }
                     />
 
                     {/* Trash button */}
                     <button
                         className="text-red-600 cursor-pointer"
                         onClick={() => {
-                            setFilters(filters.filter((_, i) => i !== index));
+                            const filterToDelete = filters[index];
+                            if (!filterToDelete || filterToDelete.columnId === null) return;
+
+                            deleteFilter.mutate({
+                                viewId: Number(viewId),
+                                filter: {
+                                  columnId: Number(filterToDelete.columnId),
+                                  operator: filterToDelete.operator,
+                                  value: filterToDelete.value,
+                                },
+                            });
+
+                            setFilters((prev) => prev.filter((_, i) => i !== index));
                         }}
                     >
                         <Trash className="w-4 h-4" />

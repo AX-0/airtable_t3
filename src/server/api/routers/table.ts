@@ -9,7 +9,7 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 import { columns, rows, tables, views, cells } from "~/server/db/schema";
-import { and, eq, gt, ilike, inArray, isNotNull, isNull, lt, ne, not, or } from "drizzle-orm";
+import { and, eq, gt, ilike, inArray, isNotNull, isNull, lt, ne, not, or, sql } from "drizzle-orm";
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
   return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
@@ -54,39 +54,56 @@ export const tableRouter = createTRPCRouter({
     let filteredRowIds: number[] | null = null;
 
     if (filters.length > 0) {
-      const cellConditions = filters.map((filter) => {
+      let matchingRowIdSets: Set<number>[] = [];
+    
+      for (const filter of filters) {
         const col = cells.columnId;
         const val = cells.value;
+        let condition;
+    
         switch (filter.operator) {
-          case "equals":
-            return and(eq(col, filter.columnId), eq(val, filter.value));
-          case "notEquals":
-            return and(eq(col, filter.columnId), ne(val, filter.value));
-          case "contains":
-            return and(eq(col, filter.columnId), ilike(val, `%${filter.value}%`));
-          case "notContains":
-            return and(eq(col, filter.columnId), not(ilike(val, `%${filter.value}%`)));
-          case "greaterThan":
-            return and(eq(col, filter.columnId), gt(val, filter.value));
-          case "lessThan":
-            return and(eq(col, filter.columnId), lt(val, filter.value));
-          case "isEmpty":
-            return and(eq(col, filter.columnId), or(isNull(val), eq(val, '')));
-          case "isNotEmpty":
-            return and(eq(col, filter.columnId), and(isNotNull(val), ne(val, '')));
+          case "EQUALS":
+            condition = and(eq(col, filter.columnId), eq(val, filter.value));
+            break;
+          case "CONTAINS":
+            condition = and(eq(col, filter.columnId), ilike(val, `%${filter.value}%`));
+            break;
+          // case "NOT_CONTAINS":
+          //   condition = and(eq(col, filter.columnId), not(ilike(val, `%${filter.value}%`)));
+            break;
+          case "GREATER_THAN":
+            condition = and(eq(col, filter.columnId), gt(sql`(${val})::numeric`, Number(filter.value)));
+            break;
+          case "LESS_THAN":
+            condition = and(eq(col, filter.columnId), lt(sql`(${val})::numeric`, Number(filter.value)));
+            break;
+          case "IS_EMPTY":
+            condition = and(eq(col, filter.columnId), or(isNull(val), eq(val, '')));
+            break;
+          case "IS_NOT_EMPTY":
+            condition = and(eq(col, filter.columnId), and(isNotNull(val), ne(val, '')));
+            break;
           default:
-            return undefined;
+            continue;
         }
-        
-      }).filter(Boolean);
     
-      const filteredCells = await ctx.db
-        .selectDistinct({ rowId: cells.rowId })
-        .from(cells)
-        .where(and(...cellConditions));
+        const matched = await ctx.db
+          .selectDistinct({ rowId: cells.rowId })
+          .from(cells)
+          .where(condition);
     
-      filteredRowIds = filteredCells.map(c => c.rowId);
+        matchingRowIdSets.push(new Set(matched.map((c) => c.rowId)));
+      }
+    
+      if (matchingRowIdSets.length > 0) {
+        let intersection = new Set(matchingRowIdSets[0]);
+        for (const s of matchingRowIdSets.slice(1)) {
+          intersection = new Set([...intersection].filter((x) => s.has(x)));
+        }
+        filteredRowIds = [...intersection];
+      }
     }
+    
 
     const rowWhereClause = input.cursor
     ? and(
