@@ -18,7 +18,14 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
 
   const [focusedCell, setFocusedCell] = useState<{ row: number; col: number } | null>(null);
 
-  const [hiddenColumns, setHiddenColumns] = useState<number[]>([]);
+  const { data: hiddenColsdata, isPending } = api.view.getHiddens.useQuery({ viewId: Number(viewId) });
+  // useEffect(() => {
+  //   setHiddenColumns((hiddenColsdata ?? []) as number[]);
+  // }, [hiddenColsdata]);  
+  
+  const initialHiddenColumns = (hiddenColsdata ?? []) as number[];
+
+  const [hiddenColumns, setHiddenColumns] = useState<number[]>(initialHiddenColumns);
 
   const toggleHiddenColumn = (columnId: number) => {
     setHiddenColumns((prev) =>
@@ -27,6 +34,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
         : [...prev, columnId]
     );
   };
+
 
   const {
     data,

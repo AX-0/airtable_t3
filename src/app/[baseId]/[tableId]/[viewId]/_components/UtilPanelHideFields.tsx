@@ -1,20 +1,52 @@
 "use client";
 
-import { useState } from "react";
 import { UtilPanel } from "./UtilPanel";
 import { EyeOff, ChevronDown } from "lucide-react";
+import { api } from "~/trpc/react";
+import { useEffect, useState } from "react";
 
 type HideFieldsPanelProps = {
+  viewId: number;
   columns: { id: number; name: string }[];
-  hiddenColumns: number[];
+  initialHiddenColumns: number[];
   onToggleColumn: (columnId: number) => void;
 };
 
 export default function HideFieldsPanel({
+  viewId,
   columns,
-  hiddenColumns,
+  initialHiddenColumns,
   onToggleColumn,
 }: HideFieldsPanelProps) {
+  const utils = api.useUtils();
+
+  const [hiddenColumns, setHiddenColumns] = useState<number[]>(initialHiddenColumns || []);
+
+  useEffect(() => {
+    setHiddenColumns(initialHiddenColumns || []);
+  }, [initialHiddenColumns]);  
+
+  const updateViewHiddens = api.view.updateViewHiddens.useMutation({
+    onSuccess: async () => {
+      await utils.view.getHiddens.invalidate();
+      await utils.table.getTableData.invalidate();
+    }    
+  });
+
+  const handleToggle = (columnId: number) => {
+    onToggleColumn(columnId);
+
+    const newHidden = hiddenColumns.includes(columnId)
+      ? hiddenColumns.filter((id) => id !== columnId)
+      : [...hiddenColumns, columnId];
+
+    setHiddenColumns(newHidden);
+    updateViewHiddens.mutate({
+      viewId: Number(viewId),
+      hiddenColumns: newHidden,
+    });
+  };
+
   return (
     <UtilPanel
       trigger={
@@ -32,7 +64,7 @@ export default function HideFieldsPanel({
             <input
               type="checkbox"
               checked={!hiddenColumns.includes(col.id)}
-              onChange={() => onToggleColumn(col.id)}
+              onChange={() => handleToggle(col.id)}
               className="rounded"
             />
             {col.name || `Column ${col.id}`}

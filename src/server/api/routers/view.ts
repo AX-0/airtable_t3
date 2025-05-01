@@ -121,4 +121,32 @@ export const viewRouter = createTRPCRouter({
   
     return { success: true };
   }),  
+
+  updateViewHiddens: protectedProcedure
+  .input(z.object({
+    viewId: z.number(),
+    hiddenColumns: z.array(z.number()),
+  }))
+  .mutation(async ({ input, ctx }) => {
+    await ctx.db.update(views)
+      .set({ hiddenColumns: input.hiddenColumns })
+      .where(eq(views.id, input.viewId));
+    return { success: true };
+  }),
+
+  getHiddens: protectedProcedure
+  .input(z.object({
+    viewId: z.number(),
+  }))
+  .query(async ({ input, ctx }) => {
+    const view = await ctx.db.query.views.findFirst({
+      where: (v, { eq }) => eq(v.id, input.viewId),
+    });
+
+    if (!view) {
+      throw new Error("View not found");
+    }
+
+    return view.hiddenColumns;
+  }),
 }) 

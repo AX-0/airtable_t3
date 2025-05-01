@@ -69,8 +69,9 @@ export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, column
                 </button> */}
 
                 <HideFieldsPanel
+                    viewId={viewId}
                     columns={columns}
-                    hiddenColumns={hiddenColumns}
+                    initialHiddenColumns={hiddenColumns}
                     onToggleColumn={setHiddenColumns}
                 />
 
