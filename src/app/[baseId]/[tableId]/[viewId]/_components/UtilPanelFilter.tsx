@@ -72,7 +72,7 @@ export default function FilterPanel({ tableId, viewId }: Props) {
         </div>
         }
     >
-        <div className="text-sm text-gray-700 space-y-4">
+        <div className="w-[500px] text-sm text-gray-700 space-y-4">
             <div className="font-semibold">In this view, show records</div>
 
             {/* Render each condition */}

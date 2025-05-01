@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { UtilPanel } from "./UtilPanel";
+import { EyeOff, ChevronDown } from "lucide-react";
 
 type HideFieldsPanelProps = {
   columns: { id: number; name: string }[];
@@ -16,9 +17,15 @@ export default function HideFieldsPanel({
 }: HideFieldsPanelProps) {
   return (
     <UtilPanel
-      trigger={<button className="text-sm px-3 py-1.5 hover:bg-gray-100 rounded-md">Hide Fields</button>}
+      trigger={
+        <div className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700">
+          <EyeOff className="w-4 h-4" />
+          Hide Fields
+          <ChevronDown className="w-4 h-4" />
+        </div>
+      }
     >
-      <h3 className="font-medium mb-2 text-sm text-gray-700">Visible Columns</h3>
+      <h3 className="w-[150px] font-medium mb-2 text-sm text-gray-700">Visible Columns</h3>
       <div className="flex flex-col gap-1 max-h-64 overflow-y-auto">
         {columns.map((col) => (
           <label key={col.id} className="flex items-center gap-2 text-sm text-gray-800">

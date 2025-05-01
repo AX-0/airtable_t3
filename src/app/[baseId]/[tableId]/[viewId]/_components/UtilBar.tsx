@@ -8,12 +8,15 @@ import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
 
 type Props = {
-    baseId: number
+    baseId: number;
     tableId: number;
     viewId: number;
-  };
+    hiddenColumns: number[];
+    columns: { id: number; name: string }[];
+    setHiddenColumns: (columnId: number) => void;
+};
 
-export default function UtilBar({ baseId, tableId, viewId }: Props) {
+export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, columns, setHiddenColumns }: Props) {
 
     const {data: views = [], isLoading} = api.view.getAllView.useQuery({tableId: Number(tableId)});
 
@@ -59,23 +62,17 @@ export default function UtilBar({ baseId, tableId, viewId }: Props) {
                     }
                 </select>
 
-                <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700">
+                {/* <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700">
                 <EyeOff className="w-4 h-4" />
                 Hide Fields
                 <ChevronDown className="w-4 h-4" />
-                </button>
+                </button> */}
 
-
-                {/* <HideFieldsPanel
+                <HideFieldsPanel
                     columns={columns}
                     hiddenColumns={hiddenColumns}
-                    onToggleColumn={(id) => {
-                        setHiddenColumns((prev) =>
-                        prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-                        );
-                    }}
-                /> */}
-
+                    onToggleColumn={setHiddenColumns}
+                />
 
                 <FilterPanel tableId={tableId} viewId={viewId}/>
 

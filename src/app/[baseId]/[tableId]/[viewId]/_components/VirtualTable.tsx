@@ -5,16 +5,28 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { api } from "~/trpc/react";
 import { EditableCell } from "./EditableCell";
 import EditableColumnHeader from "./EditableColumnHeader";
+import UtilBar from "./UtilBar";
 
 interface Props {
+  baseId: number;
   tableId: number;
   viewId: number;
 }
 
-export function VirtualTable({ tableId, viewId }: Props) {
+export function VirtualTable({ baseId, tableId, viewId }: Props) {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const [focusedCell, setFocusedCell] = useState<{ row: number; col: number } | null>(null);
+
+  const [hiddenColumns, setHiddenColumns] = useState<number[]>([]);
+
+  const toggleHiddenColumn = (columnId: number) => {
+    setHiddenColumns((prev) =>
+      prev.includes(columnId)
+        ? prev.filter((id) => id !== columnId)
+        : [...prev, columnId]
+    );
+  };
 
   const {
     data,
@@ -60,22 +72,36 @@ export function VirtualTable({ tableId, viewId }: Props) {
   if (isLoading) return <div className="p-4 text-gray-600">Loading table...</div>;
 
   return (
+
+    
     // minus nav bar height
-    <div ref={parentRef} className="overflow-auto h-[calc(100vh-9.5rem)] w-full border-t">
+    <div ref={parentRef} className="overflow-auto h-[calc(100vh-6.5rem)] w-full border-t">
+      <UtilBar
+        baseId={baseId}
+        tableId={tableId}
+        viewId={viewId}
+        hiddenColumns={hiddenColumns}
+        columns={columns}
+        setHiddenColumns={toggleHiddenColumn}
+      />
+      
+      
       <div
         style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}
       >
         {/* Header Row */}
         <div className="sticky top-0 z-10 flex bg-gray-100 border-b border-gray-300 text-sm text-gray-700 font-medium">
           <div className="w-[60px] px-3 py-2 border-r bg-white text-center">#</div>
-          {columns.map((col) => (
-            <EditableColumnHeader
-              key={col.id}
-              columnId={col.id}
-              name={col.name}
-              tableId={tableId}
-              viewId={viewId}
-            />
+          {columns
+            .filter(col => !hiddenColumns.includes(col.id))
+            .map((col) => (
+              <EditableColumnHeader
+                key={col.id}
+                columnId={col.id}
+                name={col.name}
+                tableId={tableId}
+                viewId={viewId}
+              />
           ))}
 
           <EditableColumnHeader tableId={tableId} viewId={viewId} isAddColumn />
@@ -98,9 +124,11 @@ export function VirtualTable({ tableId, viewId }: Props) {
               {virtualRow.index + 1}
             </div>
 
-            {columns.map((col) => {
-              const cellKey = `${row.id}_${col.id}`;
-              const value = cellMap.get(cellKey) ?? "";
+            {columns
+              .filter(col => !hiddenColumns.includes(col.id))
+              .map((col) => {
+                const cellKey = `${row.id}_${col.id}`;
+                const value = cellMap.get(cellKey) ?? "";
 
               return (
                 <EditableCell

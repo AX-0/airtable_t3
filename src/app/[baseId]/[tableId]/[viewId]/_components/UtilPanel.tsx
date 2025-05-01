@@ -25,7 +25,7 @@ export function UtilPanel({
       {open && (
         <div
           ref={ref}
-          className="absolute z-50 mt-2 w-[500px] rounded-xl border border-gray-200 bg-white shadow-lg p-4"
+          className="absolute z-50 mt-2 rounded-xl border border-gray-200 bg-white shadow-lg p-4"
         >
           {children}
         </div>
