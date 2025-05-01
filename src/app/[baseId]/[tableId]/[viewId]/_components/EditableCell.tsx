@@ -27,6 +27,8 @@ export function EditableCell({
   const inputRef = useRef<HTMLInputElement>(null);
   const utils = api.useUtils();
 
+  const { data: colType } = api.column.getType.useQuery({ columnId: Number(columnId) })
+
   const updateCell = api.cell.update.useMutation({
     onMutate: ({ rowId, columnId, value }) => {
       const prevData = utils.table.getTableData.getInfiniteData({
@@ -77,9 +79,16 @@ export function EditableCell({
   const handleSave = () => {
     setEditing(false);
     console.log(input + " : " + value);
-    if (input !== value) {
-      updateCell.mutate({ rowId, columnId, value: input, tableId: Number(tableId) });
+
+    if (input === value) return;
+
+    if (colType === "NUMBER" && isNaN(Number(input))) {
+      alert("Invalid input: this column expects a number.");
+      setInput(value);
+      return;
     }
+  
+    updateCell.mutate({ rowId, columnId, value: input, tableId: Number(tableId) });
   };
 
   return (

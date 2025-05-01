@@ -35,7 +35,7 @@ export default function FilterPanel({ tableId, viewId }: Props) {
     { value: "IS_NOT_EMPTY", label: "is not empty" },
     { value: "IS_EMPTY", label: "is empty" },
     { value: "CONTAINS", label: "contains" },
-    { value: "NOT_CONTAINS", label: "not contains" },
+    // { value: "NOT_CONTAINS", label: "not contains" },
     { value: "EQUALS", label: "equals" },
     ];
 

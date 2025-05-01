@@ -71,7 +71,7 @@ export const tableRouter = createTRPCRouter({
             break;
           // case "NOT_CONTAINS":
           //   condition = and(eq(col, filter.columnId), not(ilike(val, `%${filter.value}%`)));
-            break;
+          //   break;
           case "GREATER_THAN":
             condition = and(eq(col, filter.columnId), gt(sql`(${val})::numeric`, Number(filter.value)));
             break;
