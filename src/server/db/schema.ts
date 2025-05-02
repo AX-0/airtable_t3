@@ -139,6 +139,9 @@ export const tables = createTable(
       .references(() => bases.id),
     updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
   }),
+  (t) => [
+    index("tables_baseid_idx").on(t.baseId),
+  ],
 );
 
 // export const tables = createTable('tables', {
@@ -160,6 +163,9 @@ export const columns = createTable(
       .references(() => tables.id),
     type: columnTypeEnum("ColumnType").notNull().default("TEXT"),
   }),
+  (t) => [
+    index("columns_tableid_idx").on(t.tableId),
+  ],
 );
 
 // export const columns = createTable('columns', {
@@ -180,6 +186,10 @@ export const rows = createTable(
       .references(() => tables.id),
     // updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
   }),
+  (t) => [
+    index("rows_tableid_id_idx").on(t.tableId, t.id),
+    index("rows_tableid_idx").on(t.tableId),
+  ],
 );
 
 // export const rows = createTable('rows', {
@@ -202,6 +212,10 @@ export const cells = createTable(
       .references(() => columns.id),
     // updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
   }),
+  (t) => [
+    index("cells_rowid_colid_idx").on(t.rowId, t.columnId),
+    index("cells_colid_rowid_idx").on(t.columnId, t.rowId),
+  ],
 );
 
 // export const cells = createTable('cells', {
@@ -227,4 +241,7 @@ export const views = createTable(
     hiddenColumns: d.jsonb().default([]), // [columnId, columnId, ...]
     searchTerm: d.varchar({ length: 256 }), // optional text search
   }),
+  (t) => [
+    index("views_tableid_idx").on(t.tableId),
+  ],
 );

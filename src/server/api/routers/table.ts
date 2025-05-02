@@ -3,13 +3,15 @@ import { db } from "~/server/db";
 
 import pLimit from 'p-limit';
 
+const limitConcurrency = pLimit(5);
+
 import {
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
 import { columns, rows, tables, views, cells } from "~/server/db/schema";
-import { and, asc, desc, eq, gt, ilike, inArray, isNotNull, isNull, lt, ne, not, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, ilike, inArray, isNotNull, isNull, lt, ne, not, or, SQL, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
@@ -18,20 +20,20 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   );
 }
 
-const MAX_PARAMS = 65534; // tRPC max num of params
+// const MAX_PARAMS = 65534; // tRPC max num of params
 
 export const tableRouter = createTRPCRouter({
   getTableData: protectedProcedure
   .input(
     z.object({
-      tableId : z.number(),
-      cursor  : z.number().optional(),
-      limit   : z.number().default(100),
-      viewId  : z.number(),
+      tableId: z.number(),
+      cursor : z.number().optional(),
+      limit  : z.number().default(100),
+      viewId : z.number(),
     }),
   )
   .query(async ({ input, ctx }) => {
-    // ─────────────────────────────── view meta ────────────────────────────────
+    // meta
     const view = await ctx.db.query.views.findFirst({
       where: (v, { eq }) => eq(v.id, input.viewId),
     });
@@ -40,124 +42,128 @@ export const tableRouter = createTRPCRouter({
     const filters = (view.filters ?? []) as {
       columnId: number; operator: string; value: string;
     }[];
+
     const sorts = (view.sorts ?? []) as {
       columnId: number; direction: "asc" | "desc";
     }[];
 
-    // ───────────────────────────── column list ───────────────────────────────
+    // col list
     const columnsResult = await ctx.db.query.columns.findMany({
       where  : (c, { eq }) => eq(c.tableId, input.tableId),
       orderBy: (c, { asc }) => asc(c.id),
     });
+    const colTypeById = new Map<number, "NUMBER" | "TEXT">(
+      columnsResult.map(c => [c.id, c.type]),
+    );
 
-    // ────────────────────────────── filtering ────────────────────────────────
-    let filteredRowIds: number[] | null = null;
-    if (filters.length) {
-      const sets: Set<number>[] = [];
+    // where
+    const whereParts: SQL[] = [eq(rows.tableId, input.tableId)];
+    if (input.cursor) whereParts.push(gt(rows.id, input.cursor));
 
-      for (const { columnId, operator, value } of filters) {
-        let cond;
-        switch (operator) {
-          case "EQUALS":
-            cond = and(eq(cells.columnId, columnId), eq(cells.value, value));          break;
-          case "CONTAINS":
-            cond = and(eq(cells.columnId, columnId), ilike(cells.value, `%${value}%`));break;
-          case "GREATER_THAN":
-            cond = and(eq(cells.columnId, columnId), gt(sql`(${cells.value})::numeric`, Number(value))); break;
-          case "LESS_THAN":
-            cond = and(eq(cells.columnId, columnId), lt(sql`(${cells.value})::numeric`, Number(value))); break;
-          case "IS_EMPTY":
-            cond = and(eq(cells.columnId, columnId), or(isNull(cells.value), eq(cells.value, "")));     break;
-          case "IS_NOT_EMPTY":
-            cond = and(eq(cells.columnId, columnId), and(isNotNull(cells.value), ne(cells.value, ""))); break;
-          default:
-            continue;
-        }
+    for (const f of filters) {
+      const cId = f.columnId;
+      switch (f.operator) {
+        case "EQUALS":
+          whereParts.push(sql`EXISTS (
+            SELECT 1 FROM ${cells}
+            WHERE ${cells.rowId} = ${rows.id}
+              AND ${cells.columnId} = ${cId}
+              AND ${cells.value} = ${f.value}
+          )`);
+          break;
 
-        const matched = await ctx.db
-          .selectDistinct({ rowId: cells.rowId })
-          .from(cells)
-          .where(cond);
+        case "CONTAINS":
+          whereParts.push(sql`EXISTS (
+            SELECT 1 FROM ${cells}
+            WHERE ${cells.rowId} = ${rows.id}
+              AND ${cells.columnId} = ${cId}
+              AND ${cells.value} ILIKE ${`%${f.value}%`}
+          )`);
+          break;
 
-        sets.push(new Set(matched.map(m => m.rowId)));
-      }
+        case "GREATER_THAN":
+          whereParts.push(sql`(
+            SELECT NULLIF(${cells.value}, '')::numeric
+            FROM ${cells}
+            WHERE ${cells.rowId} = ${rows.id}
+              AND ${cells.columnId} = ${cId}
+            LIMIT 1
+          ) > ${Number(f.value)}`);
+          break;
 
-      if (sets.length) {
-        let inter = sets[0]!;
-        for (const s of sets.slice(1)) inter = new Set([...inter].filter(x => s.has(x)));
-        filteredRowIds = [...inter];
+        case "LESS_THAN":
+          whereParts.push(sql`(
+            SELECT NULLIF(${cells.value}, '')::numeric
+            FROM ${cells}
+            WHERE ${cells.rowId} = ${rows.id}
+              AND ${cells.columnId} = ${cId}
+            LIMIT 1
+          ) < ${Number(f.value)}`);
+          break;
+
+        case "IS_EMPTY":
+          whereParts.push(sql`NOT EXISTS (
+            SELECT 1 FROM ${cells}
+            WHERE ${cells.rowId} = ${rows.id}
+              AND ${cells.columnId} = ${cId}
+              AND (${cells.value} IS NOT NULL AND ${cells.value} <> '')
+          )`);
+          break;
+
+        case "IS_NOT_EMPTY":
+          whereParts.push(sql`EXISTS (
+            SELECT 1 FROM ${cells}
+            WHERE ${cells.rowId} = ${rows.id}
+              AND ${cells.columnId} = ${cId}
+              AND (${cells.value} IS NOT NULL AND ${cells.value} <> '')
+          )`);
+          break;
       }
     }
 
-    const idFilterClause =
-      filteredRowIds?.length
-        ? or(...chunkArray(filteredRowIds, 1000).map(chunk => inArray(rows.id, chunk)))
-        : undefined;
+    // order by
+    const orderByParts: SQL[] = sorts.map(s => {
+      const isNum = colTypeById.get(s.columnId) === "NUMBER";
+      const val   = isNum
+        ? sql`(
+            SELECT NULLIF(${cells.value}, '')::numeric
+            FROM ${cells}
+            WHERE ${cells.rowId} = ${rows.id}
+              AND ${cells.columnId} = ${s.columnId}
+            LIMIT 1
+          )`
+        : sql`(
+            SELECT ${cells.value}
+            FROM ${cells}
+            WHERE ${cells.rowId} = ${rows.id}
+              AND ${cells.columnId} = ${s.columnId}
+            LIMIT 1
+          )`;
 
-    // ──────────────────────── dynamic sort joins / ORDER BY ──────────────────
-    const sortAliases = sorts.map((s, i) => ({
-      tbl       : alias(cells, `sort_cell_${i}`),
-      columnId  : s.columnId,
-      direction : s.direction,
-    }));
+      return s.direction === "asc" ? asc(val) : desc(val);
+    });
+    orderByParts.push(asc(rows.id)); // tie-breaker
 
-    /** build SELECT … FROM rows */
-    const baseSelect = ctx.db
-      .select({
-        id      : rows.id,
-        name    : rows.name,
-        tableId : rows.tableId,
-      })
-      .from(rows);
-
-    //------------------------------------------------------------------
-    // STEP ❶  build ORDER-BY list with correlated sub-queries
-    //------------------------------------------------------------------
-    // helper that produces   asc( …subquery… )   or   desc( …subquery… )
-      function sortExpr(
-        colId: number,
-        dir: "asc" | "desc",
-      ) {
-        // sub-query that pulls the cell’s value for the current row
-        const sub = sql`(
-          SELECT ${cells.value}
-          FROM ${cells}
-          WHERE ${cells.rowId} = ${rows.id}
-            AND ${cells.columnId} = ${colId}
-          LIMIT 1
-        )`;
-
-        return dir === "asc" ? asc(sub) : desc(sub);
-      }
-
-      const orderByArgs = sorts.map(s => sortExpr(s.columnId, s.direction));
-      orderByArgs.push(asc(rows.id));      // deterministic tie-breaker
-
-
-    // ──────────────────────────────── query rows ─────────────────────────────
+    // fetch rows
     const rowsResult = await ctx.db
-    .select({
-      id      : rows.id,
-      name    : rows.name,
-      tableId : rows.tableId,
-    })
-    .from(rows)
-    .where(
-      and(
-        eq(rows.tableId, input.tableId),
-        input.cursor ? gt(rows.id, input.cursor) : undefined,
-        idFilterClause,                  // ← your existing filter clause
-      ),
-    )
-    .orderBy(...orderByArgs)
-    .limit(input.limit);
+      .select({
+        id     : rows.id,
+        name   : rows.name,
+        tableId: rows.tableId,
+      })
+      .from(rows)
+      .where(and(...whereParts))
+      .orderBy(...orderByParts)
+      .limit(input.limit);
 
     const nextCursor =
       rowsResult.length === input.limit ? rowsResult.at(-1)!.id : undefined;
 
-    // ─────────────────────────────── fetch cells ─────────────────────────────
-    let cellsResult: { id: number; value: string; rowId: number; columnId: number }[] = [];
+    // fetch cells
     const rowIds = rowsResult.map(r => r.id);
+    let cellsResult: {
+      id: number; value: string; rowId: number; columnId: number;
+    }[] = [];
 
     if (rowIds.length) {
       const parts = await Promise.all(
@@ -170,7 +176,6 @@ export const tableRouter = createTRPCRouter({
       cellsResult = parts.flat();
     }
 
-    // ──────────────────────────────── return ────────────────────────────────
     return {
       columns   : columnsResult,
       rows      : rowsResult,
@@ -353,7 +358,7 @@ export const tableRouter = createTRPCRouter({
     // Insert cells in chunks with concurrency limit
     await Promise.all(
       //MAX_PARAMS / 4
-      chunkArray(cellData, 1000).map((chunk) =>
+      chunkArray(cellData, 2000).map((chunk) =>
         limit(() => ctx.db.insert(cells).values(chunk))
       )
     );

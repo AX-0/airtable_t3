@@ -72,7 +72,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
   useEffect(() => {
     const [lastItem] = rowVirtualizer.getVirtualItems().slice(-1);
     if (!lastItem) return;
-    if (lastItem.index >= rows.length - 200 && hasNextPage && !isFetchingNextPage) {
+    if (lastItem.index >= rows.length - 300 && hasNextPage && !isFetchingNextPage) {
       void fetchNextPage();
     }
   }, [rowVirtualizer.getVirtualItems(), rows.length, hasNextPage, isFetchingNextPage]);

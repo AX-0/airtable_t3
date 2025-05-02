@@ -109,7 +109,7 @@ export const baseRouter = createTRPCRouter({
 
         // Delete columns in chunks concurrently
         await Promise.all(
-          chunkArray(colIds, 1000).map((chunk) =>
+          chunkArray(colIds, 2000).map((chunk) =>
             limit(() => ctx.db.delete(columns).where(inArray(columns.id, chunk)))
           )
         );
