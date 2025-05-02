@@ -3,6 +3,7 @@
 import { ChevronDown, Filter, EyeOff, SortAsc, Plus } from "lucide-react";
 import FilterPanel from "./UtilPanelFilter";
 import HideFieldsPanel from "./UtilPanelHideFields";
+import SortPanel from "./UtilPanelSort";
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
@@ -77,11 +78,7 @@ export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, column
 
                 <FilterPanel tableId={tableId} viewId={viewId}/>
 
-                <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700">
-                <SortAsc className="w-4 h-4" />
-                Sort
-                <ChevronDown className="w-4 h-4" />
-                </button>
+                <SortPanel tableId={tableId} viewId={viewId}/>
             </div>
 
 

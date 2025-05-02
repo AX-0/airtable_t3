@@ -9,7 +9,8 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 import { columns, rows, tables, views, cells } from "~/server/db/schema";
-import { and, eq, gt, ilike, inArray, isNotNull, isNull, lt, ne, not, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, ilike, inArray, isNotNull, isNull, lt, ne, not, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
   return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
@@ -21,178 +22,160 @@ const MAX_PARAMS = 65534; // tRPC max num of params
 
 export const tableRouter = createTRPCRouter({
   getTableData: protectedProcedure
-  .input(z.object({
-    tableId: z.number(),
-    cursor: z.number().optional(),
-    limit: z.number().default(100),
-    viewId: z.number(),    
-  }))
+  .input(
+    z.object({
+      tableId : z.number(),
+      cursor  : z.number().optional(),
+      limit   : z.number().default(100),
+      viewId  : z.number(),
+    }),
+  )
   .query(async ({ input, ctx }) => {
+    // ─────────────────────────────── view meta ────────────────────────────────
     const view = await ctx.db.query.views.findFirst({
       where: (v, { eq }) => eq(v.id, input.viewId),
     });
-    
-    if (!view) {
-      throw new Error("View not found");
-    }
-    
+    if (!view) throw new Error("View not found");
+
     const filters = (view.filters ?? []) as {
-      columnId: number;
-      operator: string;
-      value: string;
+      columnId: number; operator: string; value: string;
     }[];
-    const sorts = (view.sorts ?? []) as { // TODO
-      columnId: number;
-      direction: "asc" | "desc";
+    const sorts = (view.sorts ?? []) as {
+      columnId: number; direction: "asc" | "desc";
     }[];
 
-    const columnsResult = await db.query.columns.findMany({
-      where: ((c, { eq }) => eq(c.tableId, input.tableId)),
+    // ───────────────────────────── column list ───────────────────────────────
+    const columnsResult = await ctx.db.query.columns.findMany({
+      where  : (c, { eq }) => eq(c.tableId, input.tableId),
       orderBy: (c, { asc }) => asc(c.id),
     });
 
+    // ────────────────────────────── filtering ────────────────────────────────
     let filteredRowIds: number[] | null = null;
+    if (filters.length) {
+      const sets: Set<number>[] = [];
 
-    console.log("hello3");
-    if (filters.length > 0) {
-      const matchingRowIdSets: Set<number>[] = [];
-    
-      for (const filter of filters) {
-        const col = cells.columnId;
-        const val = cells.value;
-        let condition;
-    
-        switch (filter.operator) {
+      for (const { columnId, operator, value } of filters) {
+        let cond;
+        switch (operator) {
           case "EQUALS":
-            condition = and(eq(col, filter.columnId), eq(val, filter.value));
-            break;
+            cond = and(eq(cells.columnId, columnId), eq(cells.value, value));          break;
           case "CONTAINS":
-            condition = and(eq(col, filter.columnId), ilike(val, `%${filter.value}%`));
-            break;
-          // case "NOT_CONTAINS":
-          //   condition = and(eq(col, filter.columnId), not(ilike(val, `%${filter.value}%`)));
-          //   break;
+            cond = and(eq(cells.columnId, columnId), ilike(cells.value, `%${value}%`));break;
           case "GREATER_THAN":
-            condition = and(eq(col, filter.columnId), gt(sql`(${val})::numeric`, Number(filter.value)));
-            break;
+            cond = and(eq(cells.columnId, columnId), gt(sql`(${cells.value})::numeric`, Number(value))); break;
           case "LESS_THAN":
-            condition = and(eq(col, filter.columnId), lt(sql`(${val})::numeric`, Number(filter.value)));
-            break;
+            cond = and(eq(cells.columnId, columnId), lt(sql`(${cells.value})::numeric`, Number(value))); break;
           case "IS_EMPTY":
-            condition = and(eq(col, filter.columnId), or(isNull(val), eq(val, '')));
-            break;
+            cond = and(eq(cells.columnId, columnId), or(isNull(cells.value), eq(cells.value, "")));     break;
           case "IS_NOT_EMPTY":
-            condition = and(eq(col, filter.columnId), and(isNotNull(val), ne(val, '')));
-            break;
+            cond = and(eq(cells.columnId, columnId), and(isNotNull(cells.value), ne(cells.value, ""))); break;
           default:
             continue;
         }
-    
+
         const matched = await ctx.db
           .selectDistinct({ rowId: cells.rowId })
           .from(cells)
-          .where(condition);
-    
-        matchingRowIdSets.push(new Set(matched.map((c) => c.rowId)));
+          .where(cond);
+
+        sets.push(new Set(matched.map(m => m.rowId)));
       }
-    
-      if (matchingRowIdSets.length > 0) {
-        let intersection = new Set(matchingRowIdSets[0]);
-        for (const s of matchingRowIdSets.slice(1)) {
-          intersection = new Set([...intersection].filter((x) => s.has(x)));
-        }
-        filteredRowIds = [...intersection];
+
+      if (sets.length) {
+        let inter = sets[0]!;
+        for (const s of sets.slice(1)) inter = new Set([...inter].filter(x => s.has(x)));
+        filteredRowIds = [...inter];
       }
     }
-    
-    console.log("hello2");
-    let rowWhereClause;
 
-    if (input.cursor) {
-      rowWhereClause = and(
+    const idFilterClause =
+      filteredRowIds?.length
+        ? or(...chunkArray(filteredRowIds, 1000).map(chunk => inArray(rows.id, chunk)))
+        : undefined;
+
+    // ──────────────────────── dynamic sort joins / ORDER BY ──────────────────
+    const sortAliases = sorts.map((s, i) => ({
+      tbl       : alias(cells, `sort_cell_${i}`),
+      columnId  : s.columnId,
+      direction : s.direction,
+    }));
+
+    /** build SELECT … FROM rows */
+    const baseSelect = ctx.db
+      .select({
+        id      : rows.id,
+        name    : rows.name,
+        tableId : rows.tableId,
+      })
+      .from(rows);
+
+    //------------------------------------------------------------------
+    // STEP ❶  build ORDER-BY list with correlated sub-queries
+    //------------------------------------------------------------------
+    // helper that produces   asc( …subquery… )   or   desc( …subquery… )
+      function sortExpr(
+        colId: number,
+        dir: "asc" | "desc",
+      ) {
+        // sub-query that pulls the cell’s value for the current row
+        const sub = sql`(
+          SELECT ${cells.value}
+          FROM ${cells}
+          WHERE ${cells.rowId} = ${rows.id}
+            AND ${cells.columnId} = ${colId}
+          LIMIT 1
+        )`;
+
+        return dir === "asc" ? asc(sub) : desc(sub);
+      }
+
+      const orderByArgs = sorts.map(s => sortExpr(s.columnId, s.direction));
+      orderByArgs.push(asc(rows.id));      // deterministic tie-breaker
+
+
+    // ──────────────────────────────── query rows ─────────────────────────────
+    const rowsResult = await ctx.db
+    .select({
+      id      : rows.id,
+      name    : rows.name,
+      tableId : rows.tableId,
+    })
+    .from(rows)
+    .where(
+      and(
         eq(rows.tableId, input.tableId),
-        gt(rows.id, input.cursor),
-        filteredRowIds
-          ? or(
-              ...chunkArray(filteredRowIds, 1000).map((chunk) =>
-                inArray(rows.id, chunk)
-              )
-            )
-          : undefined
-      );
-    } else {
-      rowWhereClause = and(
-        eq(rows.tableId, input.tableId),
-        filteredRowIds
-          ? or(
-              ...chunkArray(filteredRowIds, 1000).map((chunk) =>
-                inArray(rows.id, chunk)
-              )
-            )
-          : undefined
-      );
-    }
-  
-    let rowsResult = [];
+        input.cursor ? gt(rows.id, input.cursor) : undefined,
+        idFilterClause,                  // ← your existing filter clause
+      ),
+    )
+    .orderBy(...orderByArgs)
+    .limit(input.limit);
 
-    if (filteredRowIds && filteredRowIds.length > 0) {
-      const rowChunks = chunkArray(filteredRowIds, 1000);
-    
-      const partials = await Promise.all(
-        rowChunks.map(chunk =>
-          ctx.db.query.rows.findMany({
-            where: and(
-              eq(rows.tableId, input.tableId),
-              inArray(rows.id, chunk),
-              input.cursor ? gt(rows.id, input.cursor) : undefined
-            ),
-            orderBy: (r, { asc }) => asc(r.id),
-            limit: input.limit,
-          })
-        )
-      );
-      rowsResult = partials.flat();
-    } else {
-      // If no filtering
-      rowsResult = await ctx.db.query.rows.findMany({
-        where: input.cursor
-          ? and(eq(rows.tableId, input.tableId), gt(rows.id, input.cursor))
-          : eq(rows.tableId, input.tableId),
-        orderBy: (r, { asc }) => asc(r.id),
-        limit: input.limit,
-      });
-    }    
+    const nextCursor =
+      rowsResult.length === input.limit ? rowsResult.at(-1)!.id : undefined;
 
-    console.log("hello1");
-    const allRowIds = rowsResult.map(r => r.id);
+    // ─────────────────────────────── fetch cells ─────────────────────────────
+    let cellsResult: { id: number; value: string; rowId: number; columnId: number }[] = [];
+    const rowIds = rowsResult.map(r => r.id);
 
-    let cellsResult: { id: number; value: string; rowId: number; columnId: number; }[] = [];
-    
-    if (allRowIds.length > 0) {
-      const rowIdChunks = chunkArray(allRowIds, 1000); // Same chunk size
-    
-      // for (const chunk of rowIdChunks) {
-      //   const partialCells = await ctx.db.query.cells.findMany({
-      //     where: (c, { inArray }) => inArray(c.rowId, chunk),
-      //   });
-      //   cellsResult.push(...partialCells);
-      // }
-
-      const partials = await Promise.all(
-        rowIdChunks.map(chunk =>
+    if (rowIds.length) {
+      const parts = await Promise.all(
+        chunkArray(rowIds, 1000).map(chunk =>
           ctx.db.query.cells.findMany({
             where: (c, { inArray }) => inArray(c.rowId, chunk),
-          })
-        )
+          }),
+        ),
       );
-      cellsResult = partials.flat();      
+      cellsResult = parts.flat();
     }
 
+    // ──────────────────────────────── return ────────────────────────────────
     return {
-      columns: columnsResult,
-      rows: rowsResult,
-      cells: cellsResult,
-      nextCursor: rowsResult.length === input.limit ? rowsResult.at(-1)?.id : undefined,
+      columns   : columnsResult,
+      rows      : rowsResult,
+      cells     : cellsResult,
+      nextCursor,
     };
   }),
 

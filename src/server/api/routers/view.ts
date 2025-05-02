@@ -149,4 +149,71 @@ export const viewRouter = createTRPCRouter({
 
     return view.hiddenColumns;
   }),
+
+  getSorts: protectedProcedure
+  .input(z.object({ viewId: z.number() }))
+  .query(async ({ input, ctx }) => {
+    const view = await ctx.db.query.views.findFirst({
+      where: (v, { eq }) => eq(v.id, input.viewId),
+    });
+    if (!view) throw new Error("View not found");
+    return view.sorts;
+  }),
+
+  updateViewSorts: protectedProcedure
+  .input(
+    z.object({
+      viewId: z.number(),
+      sorts: z.array(
+        z.object({
+          columnId: z.number(),
+          direction: z.enum(["asc", "desc"]),
+        }),
+      ),
+    }),
+  )
+  .mutation(async ({ input, ctx }) => {
+    await ctx.db
+      .update(views)
+      .set({ sorts: input.sorts })
+      .where(eq(views.id, input.viewId));
+    return { success: true };
+  }),
+
+  deleteSort: protectedProcedure
+  .input(
+    z.object({
+      viewId: z.number(),
+      sort: z.object({
+        columnId: z.number(),
+        direction: z.enum(["asc", "desc"]),
+      }),
+    }),
+  )
+  .mutation(async ({ input, ctx }) => {
+    const view = await ctx.db.query.views.findFirst({
+      where: (v, { eq }) => eq(v.id, input.viewId),
+    });
+    if (!view) throw new Error("View not found");
+
+    const current = (view.sorts ?? []) as {
+      columnId: number;
+      direction: "asc" | "desc";
+    }[];
+
+    const updated = current.filter(
+      s =>
+        !(
+          s.columnId === input.sort.columnId &&
+          s.direction === input.sort.direction
+        ),
+    );
+
+    await ctx.db
+      .update(views)
+      .set({ sorts: updated })
+      .where(eq(views.id, input.viewId));
+
+    return { success: true };
+  }),
 }) 
