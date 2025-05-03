@@ -77,6 +77,16 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
     }
   }, [rowVirtualizer.getVirtualItems(), rows.length, hasNextPage, isFetchingNextPage]);
 
+  const {
+    data: searchTermData,
+    isFetching: searchFetching,
+  } = api.view.getSearchTerm.useQuery(
+    { viewId: Number(viewId) },
+    { enabled: !!data }
+  );
+  
+  const searchTerm = searchTermData ?? "";
+
   if (isLoading) return <div className="p-4 text-gray-600">Loading table...</div>;
 
   return (
@@ -91,6 +101,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
         hiddenColumns={hiddenColumns}
         columns={columns}
         setHiddenColumns={toggleHiddenColumn}
+        searchTerm={searchTerm}
       />
       
       
@@ -147,6 +158,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
                   tableId={tableId}
                   isFocused={focusedCell?.row === row.id && focusedCell?.col === col.id}
                   viewId={viewId}
+                  searchTerm={searchTerm}
                   onTab={(direction) => {
                     const rowIndex = rows.findIndex((r) => r.id === row.id);
                     const colIndex = columns.findIndex((c) => c.id === col.id);

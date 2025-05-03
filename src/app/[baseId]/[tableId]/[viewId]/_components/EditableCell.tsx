@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useEffect, useRef, useState } from "react";
 import { api } from "~/trpc/react";
 
@@ -11,6 +12,7 @@ type Props = {
   isFocused: boolean;
   onTab: (direction: "next" | "prev", rowId: number, columnId: number) => void;
   viewId: number;
+  searchTerm: string;
 };
 
 export function EditableCell({
@@ -21,6 +23,7 @@ export function EditableCell({
   isFocused,
   onTab,
   viewId,
+  searchTerm,
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [input, setInput] = useState(value);
@@ -69,6 +72,8 @@ export function EditableCell({
     },
   });
 
+  useEffect(() => setInput(value), [value]);
+
   useEffect(() => {
     if (isFocused) {
       setEditing(true);
@@ -91,9 +96,33 @@ export function EditableCell({
     updateCell.mutate({ rowId, columnId, value: input, tableId: Number(tableId) });
   };
 
+  const content = React.useMemo(() => {
+    if (!searchTerm) return value;
+
+    const term = searchTerm.toLowerCase();
+    if (!value.toLowerCase().includes(term)) return value;
+
+    return value
+      .split(new RegExp(`(${term})`, "i"))
+      .map((part, i) =>
+        part.toLowerCase() === term ? (
+          <mark key={i}>{part}</mark>
+        ) : (
+          part
+        ),
+      );
+  }, [value, searchTerm]);
+
+  const hasMatch = !!searchTerm && value.toLowerCase().includes(searchTerm.toLowerCase());
+
+  const cellClass =
+    "w-[200px] px-3 py-2 text-sm text-gray-800 border-r border-gray-200 " +
+    "overflow-hidden whitespace-nowrap text-ellipsis flex items-center " +
+    (hasMatch ? "bg-amber-200/40" : "");
+
   return (
     <div
-      className="w-[200px] px-3 py-2 text-sm text-gray-800 border-r border-gray-200 overflow-hidden whitespace-nowrap text-ellipsis"
+      className={cellClass}
       onClick={() => setEditing(true)}
     >
       {editing ? (
@@ -114,7 +143,7 @@ export function EditableCell({
           className="w-full border px-1 py-0.5 rounded text-sm"
         />
       ) : (
-        <span>{input}</span>
+        <span className="truncate">{content}</span>
       )}
     </div>
   );

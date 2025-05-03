@@ -47,6 +47,8 @@ export const tableRouter = createTRPCRouter({
       columnId: number; direction: "asc" | "desc";
     }[];
 
+    const searchTerm = (view.searchTerm ?? "").trim();
+
     // col list
     const columnsResult = await ctx.db.query.columns.findMany({
       where  : (c, { eq }) => eq(c.tableId, input.tableId),
@@ -119,6 +121,14 @@ export const tableRouter = createTRPCRouter({
           )`);
           break;
       }
+    }
+
+    if (searchTerm) {
+      whereParts.push(sql`EXISTS (
+        SELECT 1 FROM ${cells}
+        WHERE ${cells.rowId} = ${rows.id}
+          AND lower(${cells.value}) ILIKE ${`%${searchTerm.toLowerCase()}%`}
+      )`);
     }
 
     // order by
@@ -358,7 +368,7 @@ export const tableRouter = createTRPCRouter({
     // Insert cells in chunks with concurrency limit
     await Promise.all(
       //MAX_PARAMS / 4
-      chunkArray(cellData, 2000).map((chunk) =>
+      chunkArray(cellData, 5000).map((chunk) =>
         limit(() => ctx.db.insert(cells).values(chunk))
       )
     );

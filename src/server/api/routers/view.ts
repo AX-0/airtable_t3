@@ -216,4 +216,30 @@ export const viewRouter = createTRPCRouter({
 
     return { success: true };
   }),
+
+  updateViewSearch: protectedProcedure
+  .input(
+    z.object({
+      viewId: z.number(),
+      search: z.string().max(256),
+    }),
+  )
+  .mutation(async ({ input, ctx }) => {
+    await ctx.db
+      .update(views)
+      .set({ searchTerm: input.search.trim() })
+      .where(eq(views.id, input.viewId));
+
+    return { success: true };
+  }),
+
+  getSearchTerm: protectedProcedure
+  .input(z.object({ viewId: z.number() }))
+  .query(async ({ input, ctx }) => {
+    const view = await ctx.db.query.views.findFirst({
+      where: (v, { eq }) => eq(v.id, input.viewId),
+    });
+    if (!view) throw new Error("View not found");
+    return view.searchTerm;
+  }),
 }) 

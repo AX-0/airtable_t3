@@ -4,6 +4,7 @@ import { ChevronDown, Filter, EyeOff, SortAsc, Plus } from "lucide-react";
 import FilterPanel from "./UtilPanelFilter";
 import HideFieldsPanel from "./UtilPanelHideFields";
 import SortPanel from "./UtilPanelSort";
+import CellSearch from "./CellSearch"
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
@@ -15,9 +16,10 @@ type Props = {
     hiddenColumns: number[];
     columns: { id: number; name: string }[];
     setHiddenColumns: (columnId: number) => void;
+    searchTerm: string;
 };
 
-export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, columns, setHiddenColumns }: Props) {
+export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, columns, setHiddenColumns, searchTerm }: Props) {
 
     const {data: views = [], isLoading} = api.view.getAllView.useQuery({tableId: Number(tableId)});
 
@@ -83,64 +85,66 @@ export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, column
 
 
             <div className="flex items-center gap-2">
-            <button
-                onClick={() => createRow.mutate({ tableId: Number(tableId) })}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition"
-                >
-                <Plus className="w-4 h-4" />
-                Create Row
-            </button>
+                <CellSearch viewId={Number(viewId)} searchTerm={searchTerm}/>
 
-            {showInput ? (
-                <div className="flex items-center gap-2">
+                <button
+                    onClick={() => createRow.mutate({ tableId: Number(tableId) })}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition"
+                    >
+                    <Plus className="w-4 h-4" />
+                    Create Row
+                </button>
 
-                    <input
-                        className="px-2 py-1 rounded border text-sm bg-white"
-                        placeholder="View name..."
-                        value={newViewName}
-                        onChange={(e) => setNewViewName(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && newViewName.trim()) {
-                            createView.mutate({ name: newViewName, tableId: Number(tableId) });
-                            }
-                            if (e.key === "Escape") {
-                            setShowInput(false);
-                            setNewViewName("");
-                            }
-                        }}
-                    />
+                {showInput ? (
+                    <div className="flex items-center gap-2">
 
-                    <button
-                        onClick={() => {
-                            if (newViewName.trim()) {
-                            createView.mutate({ name: newViewName, tableId: Number(tableId) });
+                        <input
+                            className="px-2 py-1 rounded border text-sm bg-white"
+                            placeholder="View name..."
+                            value={newViewName}
+                            onChange={(e) => setNewViewName(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && newViewName.trim()) {
+                                createView.mutate({ name: newViewName, tableId: Number(tableId) });
+                                }
+                                if (e.key === "Escape") {
+                                setShowInput(false);
+                                setNewViewName("");
+                                }
+                            }}
+                        />
+
+                        <button
+                            onClick={() => {
+                                if (newViewName.trim()) {
+                                createView.mutate({ name: newViewName, tableId: Number(tableId) });
+                                }
                             }
                         }
-                    }
-                    className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm"
-                    >
-                    Create
-                    </button>
+                        className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm"
+                        >
+                        Create
+                        </button>
 
+                        <button
+                            onClick={() => {
+                                setShowInput(false);
+                                setNewViewName("");
+                            }}
+                            className="text-gray-400 text-sm"
+                        >
+                        Cancel
+                        </button>
+                    </div>
+                    ) : (
                     <button
-                        onClick={() => {
-                            setShowInput(false);
-                            setNewViewName("");
-                        }}
-                        className="text-gray-400 text-sm"
+                        onClick={() => setShowInput(true)}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition"
                     >
-                    Cancel
+                        <Plus className="w-4 h-4" />
+                        Create View
                     </button>
-                </div>
-                ) : (
-                <button
-                    onClick={() => setShowInput(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition"
-                >
-                    <Plus className="w-4 h-4" />
-                    Create View
-                </button>
-            )}
+                )}
             </div>
 
         </div>
