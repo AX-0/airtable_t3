@@ -378,4 +378,65 @@ export const tableRouter = createTRPCRouter({
     return { success: true };
   }),
   
+  deleteTable: protectedProcedure
+  .input(z.object({ tableId: z.number() }))
+  .mutation(async ({ input, ctx }) => {
+    const { tableId } = input;
+
+    // get row ids and col ids
+    const rowIds = await ctx.db
+      .select({ id: rows.id })
+      .from(rows)
+      .where(eq(rows.tableId, tableId))
+      .then(r => r.map(x => x.id));
+
+    const colIds = await ctx.db
+      .select({ id: columns.id })
+      .from(columns)
+      .where(eq(columns.tableId, tableId))
+      .then(r => r.map(x => x.id));
+
+    // delete cells
+    if (rowIds.length) {
+      await Promise.all(
+        chunkArray(rowIds, 2000).map(chunk =>
+          limitConcurrency(() =>
+            ctx.db
+              .delete(cells)
+              .where(inArray(cells.rowId, chunk)),
+          ),
+        ),
+      );
+    }
+
+    // delete rows
+    if (rowIds.length) {
+      await Promise.all(
+        chunkArray(rowIds, 2000).map(chunk =>
+          limitConcurrency(() =>
+            ctx.db.delete(rows).where(inArray(rows.id, chunk)),
+          ),
+        ),
+      );
+    }
+
+    // delete cols
+    if (colIds.length) {
+      await Promise.all(
+        chunkArray(colIds, 1000).map(chunk =>
+          limitConcurrency(() =>
+            ctx.db.delete(columns).where(inArray(columns.id, chunk)),
+          ),
+        ),
+      );
+    }
+
+    // delete views
+    await ctx.db.delete(views).where(eq(views.tableId, tableId));
+
+    // delete table
+    await ctx.db.delete(tables).where(eq(tables.id, tableId));
+
+    return { success: true };
+  }),
 }) 

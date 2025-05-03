@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
-import { Grid2x2Plus, Plus, Search, Trash2 } from "lucide-react";
+import { Grid2x2Plus, Plus, Search, Trash2, X } from "lucide-react";
 import CreateTableModal from "./TableTabsCreateTable";
 
 type TableTabsProps = {
@@ -41,10 +41,33 @@ export default function TableTabs({ baseId, selectedTableId, viewId }: TableTabs
     },
   });
 
+  const getFirstTableView = api.base.getFirstTableAndView.useMutation();
+  const deleteTable = api.table.deleteTable.useMutation({
+    onSuccess: async () => {
+      const res = await getFirstTableView.mutateAsync({ baseId: Number(baseId) });
+      router.push(`/${baseId}/${res.tableId}/${res.viewId}`);
+    },
+  });
+  const deleteIsPending = deleteTable.isPending;
+
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [targetTableName, setTargetName] = useState("");
+  const confirmDelete = async () => {
+    await deleteTable.mutateAsync({ tableId: Number(selectedTableId) });
+    setShowConfirm(false);
+    router.refresh();
+  };
+
+  const nameById = useMemo(
+    () => new Map(tables.map(t => [t.id, t.name])),
+    [tables],
+  );
+  
+
   // const isPending = add1kRows.isPending;
   const isPending = add100kRows.isPending;
 
-  console.log(selectedTableId);
+  // console.log(nameById.get(selectedTableId));
 
   return (
     <>
@@ -72,12 +95,17 @@ export default function TableTabs({ baseId, selectedTableId, viewId }: TableTabs
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
-          <button
-            // onClick={() => setOpen(true)}
-            className="px-3 py-1.5 text-sm rounded-full text-red-600 hover:bg-gray-200 transition cursor-pointer"
-          >
-            <Trash2 />
-          </button>
+          {tables.length > 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowConfirm(true);
+              }}
+              className="px-3 py-1.5 rounded-full text-red-600 hover:bg-gray-200"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
 
           <button
             onClick={() => setOpen(true)}
@@ -102,6 +130,36 @@ export default function TableTabs({ baseId, selectedTableId, viewId }: TableTabs
       </div>
 
       <CreateTableModal baseId={baseId} open={open} onClose={() => setOpen(false)} />
+
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">Delete Table</h3>
+
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to delete <strong>{nameById.get(Number(selectedTableId)) ?? `Table ID: ${selectedTableId}`}</strong>? This action cannot be undone.
+            </p>
+
+            <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setShowConfirm(false)}
+              className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-sm"
+              disabled={deleteIsPending}
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={confirmDelete}
+              className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-sm disabled:opacity-50"
+              disabled={deleteIsPending}
+            >
+              {deleteIsPending ? "Deleting..." : "Delete"}
+            </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
