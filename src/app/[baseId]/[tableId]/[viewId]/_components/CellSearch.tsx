@@ -11,9 +11,9 @@ type Props = {
 export default function CellSearch({ viewId, searchTerm }: Props) {
     const utils = api.useUtils();
     const updateViewSearch = api.view.updateViewSearch.useMutation({
-      onSuccess: () => {
-        utils.table.getTableData.invalidate();
-        utils.view.getSearchTerm.invalidate({ viewId });
+      onSuccess: async () => {
+        await utils.table.getTableData.invalidate();
+        await utils.view.getSearchTerm.invalidate({ viewId });
       },
     });
   
