@@ -44,6 +44,7 @@ export default function TableTabs({ baseId, selectedTableId, viewId }: TableTabs
   const getFirstTableView = api.base.getFirstTableAndView.useMutation();
   const deleteTable = api.table.deleteTable.useMutation({
     onSuccess: async () => {
+      await utils.base.getAllTableIdName.invalidate();
       const res = await getFirstTableView.mutateAsync({ baseId: Number(baseId) });
       router.push(`/${baseId}/${res.tableId}/${res.viewId}`);
     },
@@ -101,7 +102,7 @@ export default function TableTabs({ baseId, selectedTableId, viewId }: TableTabs
                 e.stopPropagation();
                 setShowConfirm(true);
               }}
-              className="px-3 py-1.5 rounded-full text-red-600 hover:bg-gray-200"
+              className="px-3 py-1.5 rounded-full text-red-600 hover:bg-gray-200 cursor-pointer"
             >
               <Trash2 className="w-4 h-4" />
             </button>
