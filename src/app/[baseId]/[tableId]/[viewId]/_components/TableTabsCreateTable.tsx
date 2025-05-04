@@ -18,10 +18,13 @@ export default function CreateTableModal({ baseId, open, onClose }: Props) {
   const utils = api.useUtils();
   const createTable = api.table.createTableAndView.useMutation({
     onSuccess: async () => {
+      // console.log(name);
       await utils.base.getAllTableIdName.invalidate();
       onClose();
     },
   });
+
+  const isPending = createTable.isPending;
 
   if (!open) return null;
 
@@ -42,14 +45,19 @@ export default function CreateTableModal({ baseId, open, onClose }: Props) {
           <button
             onClick={onClose}
             className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-sm"
+            disabled={isPending}
           >
             Cancel
           </button>
           <button
-            onClick={() => createTable.mutate({ baseId: Number(baseId), name })}
+            onClick={
+              () => createTable.mutate({ baseId: Number(baseId), name })
+            }
             className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm"
+            disabled={isPending}
           >
-            Create
+            {/* Creating */}
+            {isPending ? "Creating..." : "Create"}
           </button>
         </div>
       </div>

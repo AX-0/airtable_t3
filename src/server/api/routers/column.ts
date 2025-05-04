@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { db } from "~/server/db";
 
+import pLimit from 'p-limit';
+
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -8,6 +10,12 @@ import {
 } from "~/server/api/trpc";
 import { bases, tables, cells, rows, columns, views } from "~/server/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
+    arr.slice(i * size, i * size + size)
+  );
+}
 
 export const columnRouter = createTRPCRouter({
     updateColumnName: protectedProcedure
@@ -38,15 +46,24 @@ export const columnRouter = createTRPCRouter({
         where: (r, { eq }) => eq(r.tableId, tableId),
       });
 
+      const newCells: { rowId: number; columnId: number; value: string }[] = [];
+
       if (rowsInTable.length > 0) {
-        const newCells = rowsInTable.map((row) => ({
-          rowId: row.id,
-          columnId,
-          value: "",
-        }));
+        rowsInTable.forEach(row =>
+          newCells.push({ rowId: row.id, columnId, value: "" })
+        );
   
-        await ctx.db.insert(cells).values(newCells);
+        // await ctx.db.insert(cells).values(newCells);
       }
+
+      const limit = pLimit(5);
+      
+      await Promise.all(
+        //MAX_PARAMS / 4
+        chunkArray(newCells, 5000).map((chunk) =>
+          limit(() => ctx.db.insert(cells).values(chunk))
+        )
+      );
 
       return { success: true, columnId };
     }),

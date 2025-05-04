@@ -69,6 +69,7 @@ export function EditableCell({
     },
     onSettled: () => {
       void utils.table.getTableData.invalidate();
+      void utils.view.getSearchTerm.invalidate({ viewId });
     },
   });
 
@@ -93,16 +94,17 @@ export function EditableCell({
       return;
     }
   
+    setInput(input);
     updateCell.mutate({ rowId, columnId, value: input, tableId: Number(tableId) });
   };
 
   const content = React.useMemo(() => {
-    if (!searchTerm) return value;
+    if (!searchTerm) return input;
 
     const term = searchTerm.toLowerCase();
-    if (!value.toLowerCase().includes(term)) return value;
+    if (!value.toLowerCase().includes(term)) return input;
 
-    return value
+    return input
       .split(new RegExp(`(${term})`, "i"))
       .map((part, i) =>
         part.toLowerCase() === term ? (
@@ -111,7 +113,7 @@ export function EditableCell({
           part
         ),
       );
-  }, [value, searchTerm]);
+  }, [input, searchTerm]);
 
   const hasMatch = !!searchTerm && value.toLowerCase().includes(searchTerm.toLowerCase());
 

@@ -102,28 +102,28 @@ export default function TableTabs({ baseId, selectedTableId, viewId }: TableTabs
                 e.stopPropagation();
                 setShowConfirm(true);
               }}
-              className="px-3 py-1.5 rounded-full text-red-600 hover:bg-gray-200 cursor-pointer"
+              className="px-3 py-1.5 rounded-full text-red-600 cursor-pointer"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-6 h-6" />
             </button>
           )}
 
           <button
             onClick={() => setOpen(true)}
-            className="px-3 py-1.5 text-sm rounded-full text-blue-600 hover:bg-gray-200 transition cursor-pointer"
+            className="px-3 py-1.5 text-sm rounded-full text-blue-600 transition cursor-pointer"
           >
-            <Plus />
+            <Plus className="w-8 h-8" />
           </button>
 
           <button
             // onClick={() => add1kRows.mutate({tableId: Number(selectedTableId)})}
             onClick={() => add100kRows.mutate({tableId: Number(selectedTableId)})}
-            className="px-3 py-1.5 text-sm rounded-full text-blue-600 hover:bg-gray-200 transition cursor-pointer"
+            className="px-3 py-1.5 text-sm rounded-full text-blue-600 transition cursor-pointer"
           >
             {isPending ? (
               "Adding..."
             ) : (
-              <Grid2x2Plus />
+              <Grid2x2Plus className="w-6 h-6" />
             )}
             
           </button>
