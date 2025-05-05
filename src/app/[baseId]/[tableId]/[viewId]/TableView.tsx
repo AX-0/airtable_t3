@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 // import { TableTabs } from "../_components/TableTabs";
-import { VirtualTable } from "./_components/VirtualTable";
+import VirtualTable from "./_components/Table/VirtualTableTG";
 // import { TableToolbar } from "../_components/TableToolbar";
 
 type Props = {
