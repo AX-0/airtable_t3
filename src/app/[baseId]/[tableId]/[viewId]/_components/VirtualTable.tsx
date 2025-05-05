@@ -110,7 +110,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
       >
         {/* Header Row */}
         <div className="sticky top-0 z-10 flex bg-gray-100 border-b border-gray-300 text-sm text-gray-700 font-medium">
-          <div className="w-[60px] px-3 py-2 border-r bg-white text-center">#</div>
+          <div className="w-[100px] px-3 py-2 border-r bg-white text-center">#</div>
           {columns
             .filter(col => !hiddenColumns.includes(col.id))
             .map((col) => (
@@ -139,7 +139,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
               style={{ transform: `translateY(${virtualRow.start}px)` }}
             >
 
-            <div className="w-[60px] px-3 py-2 border-r text-center bg-gray-50">
+            <div className="w-[100px] px-3 py-2 border-r bg-gray-50">
               {virtualRow.index + 1}
             </div>
 

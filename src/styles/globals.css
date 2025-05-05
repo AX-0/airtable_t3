@@ -10,3 +10,7 @@
   color: inherit;
   padding: 0;
 }
+
+.menu-item {
+  @apply w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100;
+}

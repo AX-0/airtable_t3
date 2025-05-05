@@ -4,6 +4,7 @@ import { Menu, Search, HelpCircle, Bell } from "lucide-react"; // Lucide icons
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react"
+import AccountDropdown from "./AccountDropdown";
 
 export default function HomeNavbar() {
   return (
@@ -16,8 +17,8 @@ export default function HomeNavbar() {
       </div>
 
       {/* Middle, search //TODO */}
-      {/* <div className="flex items-center flex-1 max-w-lg mx-8">
-        <div className="flex items-center w-full px-4 py-2 bg-gray-100 rounded-full">
+      <div className="flex justify-center w-full px-4 flex-1 max-w-lg mx-8">
+        <div className="flex items-center w-[300px] px-4 py-2 bg-white border-2 border-gray-200 rounded-full cursor-pointer">
           <Search className="w-5 h-5 text-gray-500" />
           <input
             type="text"
@@ -25,12 +26,12 @@ export default function HomeNavbar() {
             className="flex-1 bg-transparent border-none outline-none px-2 text-sm"
           />
         </div>
-      </div> */}
+      </div>
 
       {/* Right */}
       <div className="flex items-center gap-4">
-        {/* <HelpCircle className="w-5 h-5 text-gray-600" />
-        <Bell className="w-5 h-5 text-gray-600" /> */}
+        <HelpCircle className="w-5 h-5 text-gray-800" />
+        <Bell className="w-5 h-5 text-gray-800" />
 
         {/* <form 
           method="POST"

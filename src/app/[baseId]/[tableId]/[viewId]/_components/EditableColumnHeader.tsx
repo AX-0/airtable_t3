@@ -97,7 +97,7 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
   
   return (
     <div
-      className="w-[200px] px-3 py-2 border-r bg-gray-200 text-sm font-medium text-gray-700"
+      className="w-[200px] px-3 py-2 border-r-gray-200 border-b border-gray-300 border-1 bg-gray-100 text-sm font-medium text-gray-700"
       onClick={() => setEditing(true)}
     >
       {editing ? (
