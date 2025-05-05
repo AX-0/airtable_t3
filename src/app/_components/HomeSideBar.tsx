@@ -12,26 +12,26 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
         }`}
       >
         {/* Top section */}
-        <div className={`${collapsed ? "justify-center" : "justify-between"}`}>
-          <div className={`px-4 py-4 text-sm font-semibold flex items-center`}>
-            {!collapsed && <span>Home</span>}
-            {!collapsed && <ChevronDown className="w-4 h-4" />}
-          </div>
+        <div className={`p-4 ${collapsed ? "justify-center" : "justify-between"}`}>
+            {/* <div className={`px-4 py-4 text-sm font-semibold flex items-center`}>
+                {!collapsed && <span>Home</span>}
+                {!collapsed && <ChevronDown className="w-4 h-4" />}
+            </div> */}
   
-          {/* <div className="px-4 py-2 text-gray-600 text-sm flex items-center gap-2">
+            {/* <div className="px-4 py-2 text-gray-600 text-sm flex items-center gap-2">
             <Star className="w-4 h-4" />
             {!collapsed && <span>Your starred bases, interfaces, and workspaces will appear here</span>}
-          </div> */}
+            </div> */}
   
-        <div className={`px-4 py-3 text-sm font-semibold hover:bg-gray-100 cursor-pointer flex ${collapsed ? "justify-center" : "justify-between"}`}>
-        <div className={`flex items-center gap-2 ${collapsed ? "justify-center" : ""}`}>
-            <AppWindow className="w-4 h-4" />
-            {!collapsed && <span>All workspaces</span>}
-        </div>
-        {!collapsed && <Plus className="w-4 h-4" />}
-        </div>
+            <div className={`py-3 text-sm font-semibold hover:bg-gray-100 cursor-pointer flex ${collapsed ? "justify-center" : "justify-between"}`}>
+                <div className={`flex items-center gap-2 ${collapsed ? "justify-center" : ""}`}>
+                    <AppWindow className="w-4 h-4" />
+                    {!collapsed && <span>All workspaces</span>}
+                </div>
+                {!collapsed && <Plus className="w-4 h-4" />}
+            </div>
 
-          <div className="border-t-2 border-gray-200" />
+          <div className=" border-t-2 border-gray-200" />
         </div>
   
         {/* Bottom section */}

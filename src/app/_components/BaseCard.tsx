@@ -50,24 +50,27 @@ export default function BaseCard({ base }: BaseCardProps) {
     <>
       <div
         onClick={handleClick}
-        className="flex justify-between items-center rounded-xl bg-white shadow-sm hover:shadow-md transition p-4 cursor-pointer"
+        className="flex justify-between items-center rounded-xl bg-white shadow-sm hover:shadow-md transition px-4 py-5 cursor-pointer"
       >
         <div className="flex items-center gap-4 flex-1">
-          <div className="w-12 h-12 rounded-lg bg-purple-700 flex items-center justify-center text-white">
+          <div className="w-15 h-15 rounded-lg bg-purple-700 flex items-center justify-center text-white">
             <NotepadText />
           </div>
+
           <h2 className="text-lg font-semibold text-black">{base.name}</h2>
         </div>
+
         <button
           onClick={(e) => {
             e.stopPropagation();
             setShowConfirm(true);
           }}
-          className="text-red-600 hover:text-red-800 transition"
+          className="text-red-600 hover:text-red-800 transition cursor-pointer"
           title="Delete base"
         >
           <Trash2 className="w-5 h-5" />
         </button>
+
       </div>
 
       {/* Confirmation */}
