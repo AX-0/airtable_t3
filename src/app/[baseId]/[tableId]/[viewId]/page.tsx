@@ -1,3 +1,4 @@
+import HomeNavbar from "~/app/_components/HomeNavbar";
 import TableView from "./TableView";
 import TableTabs from "./_components/TableTabs"
 import UtilBar from "./_components/UtilBar"
@@ -17,6 +18,8 @@ export default async function ViewPage({
 
   return (
     <>
+    <HomeNavbar setCollapsed={null} />
+    
     <TableTabs baseId={baseId} selectedTableId={tableId} viewId={viewId}/>
 
     {/* <UtilBar

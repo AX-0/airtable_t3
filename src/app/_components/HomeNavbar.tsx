@@ -1,16 +1,39 @@
 "use client";
 
-import { Menu, Search, HelpCircle, Bell } from "lucide-react"; // Lucide icons
+import { Menu as MenuIcon, Search, HelpCircle, Bell, Home, Settings, LogOut, AppWindow, Store, Upload, PlusCircle, Plus, ChevronDown, Star } from "lucide-react"; // Lucide icons
 import Image from "next/image";
 import Link from "next/link";
-import { signOut } from "next-auth/react"
+// import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
+
 import AccountDropdown from "./AccountDropdown";
 
-export default function HomeNavbar() {
+import { useSession  } from "next-auth/react"
+import { useState } from "react";
+
+export default function HomeNavbar({
+  setCollapsed,
+}: {
+  setCollapsed: React.Dispatch<React.SetStateAction<boolean>> | null;
+}) {
+  const { data: session, status } = useSession();
+
+  if (!session && status !== "loading") return null;
+
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between w-full h-16 px-4 bg-white">
+      
       {/* Left */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-8">
+
+        {setCollapsed ?
+          <button onClick={() => setCollapsed(prev => !prev)}>
+          <MenuIcon className="w-6 h-6 cursor-pointer" />
+          </button> 
+          :
+          ""
+        }
+        
+
         <Link href="/">
           <Image src="/logo.png" alt="Logo" width={120} height={32} className="cursor-pointer" />
         </Link>
@@ -33,20 +56,7 @@ export default function HomeNavbar() {
         <HelpCircle className="w-5 h-5 text-gray-800" />
         <Bell className="w-5 h-5 text-gray-800" />
 
-        {/* <form 
-          method="POST"
-          action="/api/auth/signout"
-          className="px-3 py-2 rounded-full bg-gray-500 text-white flex items-center justify-center font-bold"
-        >
-          <input type="hidden" name="callbackUrl" value="/" />
-          <button type="submit">Sign out</button>
-        </form> */}
-        <button 
-        className="px-3 py-2 rounded-full bg-gray-500 hover:bg-gray-600 text-white flex items-center justify-center font-bold cursor-pointer transition"
-        onClick={() => signOut({ callbackUrl: "/login" })}
-        >
-          Sign out
-        </button>
+        <AccountDropdown />
       </div>
     </nav>
   );
