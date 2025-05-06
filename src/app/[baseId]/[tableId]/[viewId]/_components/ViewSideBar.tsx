@@ -4,6 +4,7 @@ import {
   LayoutGrid,
   Check,
   Table2,
+  Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -35,9 +36,24 @@ export default function ViewSidebarPanel({
     const utils = api.useUtils();
     const router = useRouter();
 
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [targetViewId, setTargetViewId] = useState<number | null>(null);
+    const [targetViewName, setTargetViewName] = useState<string>("");
+    
+    const getFirstView = api.view.getFirstView.useMutation();
+    const deleteView = api.view.deleteView.useMutation({
+        onSuccess: async () => {
+            await utils.view.getAllView.invalidate();
+
+            const fallback = await getFirstView.mutateAsync({ tableId: views[0]?.tableId ?? 0 });
+            router.push(`/${baseId}/${fallback.tableId}/${fallback.viewId}`);
+        },
+    });
+
+    const deleteIsPending = deleteView.isPending;
+
     const [showModal, setShowModal] = useState(false);
     const [newViewName, setNewViewName] = useState("");
-
 
     const createView = api.view.createView.useMutation({
         onSuccess: async (newView) => {
@@ -45,6 +61,8 @@ export default function ViewSidebarPanel({
           router.push(`/${baseId}/${views[0]?.tableId}/${newView.id}`);
         },
     });
+
+    console.log(selectedViewId);
 
     return (
         <>
@@ -64,17 +82,37 @@ export default function ViewSidebarPanel({
                             <button
                                 key={view.id}
                                 className={`
-                            w-full flex items-center justify-between px-3 py-2 text-sm rounded cursor-pointer
-                            ${selectedViewId === view.id
+                                    w-full flex items-center justify-between px-3 py-2 text-sm rounded cursor-pointer
+                                    ${Number(selectedViewId) === Number(view.id)
                                         ? "bg-blue-100 text-blue-800"
                                         : "hover:bg-gray-100"}
-                        `}
+                                `}
                             >
                                 <div className="flex items-center gap-2 text-left w-full">
                                     <Table2 className="w-4 h-4 text-blue-500" />
                                     <span className="flex-1 truncate">{view.name}</span>
                                 </div>
-                                {selectedViewId === view.id && <Check className="w-4 h-4 text-blue-500" />}
+
+                                <div className="flex items-center justify-between gap-2">
+                                {views.length > 1 && (
+                                    <button
+                                        className="cursor-pointer"
+                                        onClick={(e) => {
+                                        e.stopPropagation();
+                                        setTargetViewId(view.id);
+                                        setTargetViewName(view.name ?? `View ${view.id}`);
+                                        setShowDeleteModal(true);
+                                        }}
+                                    >
+                                        <Trash2 className="w-4 h-4 text-red-600" />
+                                    </button>
+                                )}
+                                    
+                                    {Number(selectedViewId) === Number(view.id) && <Check className="w-4 h-4 text-blue-500" />}
+                                </div>
+                                
+
+                                
                             </button>
                         ))}
                     </div>
@@ -139,6 +177,42 @@ export default function ViewSidebarPanel({
                     </div>
                 </div>
             )}
+
+
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+                    <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-800">Delete View</h3>
+                    <p className="text-sm text-gray-600 mb-6">
+                        Are you sure you want to delete <strong>{targetViewName}</strong>?
+                    </p>
+
+                    <div className="flex justify-end gap-3">
+                        <button
+                            onClick={() => setShowDeleteModal(false)}
+                            className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-sm"
+                            disabled={deleteIsPending}
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            onClick={async () => {
+                                if (targetViewId !== null) {
+                                await deleteView.mutateAsync({ viewId: targetViewId });
+                                setShowDeleteModal(false);
+                                }
+                            }}
+                            className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-sm"
+                            disabled={deleteIsPending}
+                        >
+                            {deleteIsPending ? "Deleting..." : "Delete"}
+                        </button>
+                    </div>
+                    </div>
+                </div>
+            )}
+
         </>
     );
 }

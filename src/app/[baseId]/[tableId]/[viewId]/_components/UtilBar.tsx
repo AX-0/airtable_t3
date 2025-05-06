@@ -89,57 +89,6 @@ export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, column
                     <Plus className="w-4 h-4" />
                     Create Row
                 </button>
-
-                {showInput ? (
-                    <div className="flex items-center gap-2">
-
-                        <input
-                            className="px-2 py-1 rounded border text-sm bg-white"
-                            placeholder="View name..."
-                            value={newViewName}
-                            onChange={(e) => setNewViewName(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter" && newViewName.trim()) {
-                                createView.mutate({ name: newViewName, tableId: Number(tableId) });
-                                }
-                                if (e.key === "Escape") {
-                                setShowInput(false);
-                                setNewViewName("");
-                                }
-                            }}
-                        />
-
-                        <button
-                            onClick={() => {
-                                if (newViewName.trim()) {
-                                createView.mutate({ name: newViewName, tableId: Number(tableId) });
-                                }
-                            }
-                        }
-                        className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm"
-                        >
-                        Create
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                setShowInput(false);
-                                setNewViewName("");
-                            }}
-                            className="text-gray-400 text-sm"
-                        >
-                        Cancel
-                        </button>
-                    </div>
-                    ) : (
-                    <button
-                        onClick={() => setShowInput(true)}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Create View
-                    </button>
-                )}
             </div>
 
         </div>

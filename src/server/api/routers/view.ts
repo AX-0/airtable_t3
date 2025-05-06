@@ -252,4 +252,20 @@ export const viewRouter = createTRPCRouter({
         if (!view) throw new Error("View not found");
         return view.name;
     }),
+
+    deleteView: protectedProcedure
+    .input(z.object({ viewId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+        const view = await ctx.db.query.views.findFirst({
+            where: (v, { eq }) => eq(v.id, input.viewId),
+        });
+
+        if (!view) {
+            throw new Error("View not found");
+        }
+
+        await ctx.db.delete(views).where(eq(views.id, input.viewId));
+
+        return { success: true };
+    }),
 }) 
