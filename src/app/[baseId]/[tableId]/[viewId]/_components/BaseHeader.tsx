@@ -3,7 +3,7 @@
 import TableTabs from "./TableTabs"
 import BaseNavbar from "./BaseNavBar";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "~/trpc/react";
 
 type Props = {
@@ -19,9 +19,15 @@ export default function BaseHeader({ baseId, tableId, viewId }: Props) {
     );
     
     const base = baseQ ?? null;
-    
-    const [color, setColor] = useState<string>(base?.color ?? "blue");
 
+    const [color, setColor] = useState<string>("blue");
+
+    useEffect(() => {
+        if (baseQ?.color) {
+            setColor(baseQ.color);
+        }
+    }, [baseQ?.color]);
+    
     if (isLoading || !baseQ) return null;
 
   return (
