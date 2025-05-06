@@ -58,7 +58,7 @@ export default function AccountDropdown() {
 
           <div className="border-t my-1 mx-4 border-gray-200" />
 
-          <button className="flex menu-item items-center gap-2">
+          <button className="flex menu-item items-center gap-2 cursor-pointer">
             <User className="w-4 h-4" />
             Account
           </button>
@@ -83,7 +83,7 @@ export default function AccountDropdown() {
             <Trash2 className="w-4 h-4" /> Trash
           </button> */}
 
-          <button className="menu-item flex items-center gap-2"
+          <button className="menu-item flex items-center gap-2 cursor-pointer"
           onClick={() => signOut({ callbackUrl: "/login" })}>
             <LogOut className="w-4 h-4" /> Log out
           </button>

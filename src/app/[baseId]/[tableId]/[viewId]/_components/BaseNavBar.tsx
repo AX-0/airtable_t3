@@ -10,6 +10,7 @@ import { useSession  } from "next-auth/react"
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
+import BaseDropdown from "./BaseDropDown";
 
 type Props = {
     baseId: number;
@@ -66,10 +67,12 @@ export default function BaseNavbar({ baseId }: Props) {
 
                 </div>
 
-                <button className="flex justify-between items-center font-bold text-xl gap-1 cursor-pointer">
+                {/* <button className="flex justify-between items-center font-bold text-xl gap-1 cursor-pointer">
                     {base?.name}
                     <ChevronDown />
-                </button>
+                </button> */}
+
+                <BaseDropdown base={base}/>
 
                 <div className="flex justify-between items-center gap-3 text-gray-100 text-[0.8125rem]">
                     <button className="rounded-full bg-black/25 text-white px-3 py-1 shadow-inner shadow-black/10">
