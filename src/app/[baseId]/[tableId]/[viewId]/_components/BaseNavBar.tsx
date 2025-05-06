@@ -27,6 +27,9 @@ export default function BaseNavbar({ baseId }: Props) {
   
     const base = baseQ ?? null;
 
+    
+    const [color, setColor] = useState<string>(base?.color ?? "blue");
+
     if (isLoading || !baseQ) return null;
   
     const bgColorClassMap: Record<string, string> = {
@@ -40,14 +43,12 @@ export default function BaseNavbar({ baseId }: Props) {
       orange: "bg-orange-500",
     };
   
-    const bgClass = base?.color && bgColorClassMap[base.color]
-        ? bgColorClassMap[base.color]
-        : "bg-white";
+    const bgClass = bgColorClassMap[color] ?? "bg-white";
     
     // console.log(bgClass);
 
     return (
-        <nav className={`sticky top-0 z-50 flex items-center justify-between w-full h-12 px-4 shadow-sm text-white ${bgClass}`}>
+        <nav className={`sticky top-0 z-50 flex items-center justify-between w-full h-14 px-4 shadow-sm text-white ${bgClass}`}>
             {/* Left */}
             <div className="flex items-center justify-between gap-4">
                 <div
@@ -72,7 +73,10 @@ export default function BaseNavbar({ baseId }: Props) {
                     <ChevronDown />
                 </button> */}
 
-                <BaseDropdown base={base}/>
+                <BaseDropdown 
+                    base={base}
+                    onColorChange={(newColor) => setColor(newColor)}
+                />
 
                 <div className="flex justify-between items-center gap-3 text-gray-100 text-[0.8125rem]">
                     <button className="rounded-full bg-black/25 text-white px-3 py-1 shadow-inner shadow-black/10">

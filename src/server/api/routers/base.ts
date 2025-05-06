@@ -260,4 +260,17 @@ export const baseRouter = createTRPCRouter({
           },
         });
       }),
+
+    updateColor: protectedProcedure
+      .input(z.object({
+          id: z.number(),
+          color: z.string().min(1),
+      })
+      )
+      .mutation(async ({ ctx, input }) => {
+      return await db
+          .update(bases)
+          .set({ color: input.color })
+          .where(eq(bases.id, input.id));
+    }),
 });
