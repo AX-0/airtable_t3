@@ -5,148 +5,149 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "~/trpc/react";
 
 type Props = {
-  rowId: number;
-  columnId: number;
-  value: string;
-  tableId: number;
-  isFocused: boolean;
-  onTab: (direction: "next" | "prev", rowId: number, columnId: number) => void;
-  viewId: number;
-  searchTerm: string;
+    rowId: number;
+    columnId: number;
+    value: string;
+    tableId: number;
+    isFocused: boolean;
+    onTab: (direction: "next" | "prev", rowId: number, columnId: number) => void;
+    viewId: number;
+    searchTerm: string;
 };
 
 export function EditableCell({
-  rowId,
-  columnId,
-  value,
-  tableId,
-  isFocused,
-  onTab,
-  viewId,
-  searchTerm,
+    rowId,
+    columnId,
+    value,
+    tableId,
+    isFocused,
+    onTab,
+    viewId,
+    searchTerm,
 }: Props) {
-  const [editing, setEditing] = useState(false);
-  const [input, setInput] = useState(value);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const utils = api.useUtils();
+    const [editing, setEditing] = useState(false);
+    const [input, setInput] = useState(value);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const utils = api.useUtils();
 
-  const { data: colType } = api.column.getType.useQuery({ columnId: Number(columnId) })
+    const { data: colType } = api.column.getType.useQuery({ columnId: Number(columnId) })
 
-  const updateCell = api.cell.update.useMutation({
+    const updateCell = api.cell.update.useMutation({
     onMutate: ({ rowId, columnId, value }) => {
-      const prevData = utils.table.getTableData.getInfiniteData({
+        const prevData = utils.table.getTableData.getInfiniteData({
         tableId,
         viewId: Number(viewId)
-      });
+        });
 
-      utils.table.getTableData.setInfiniteData({
+        utils.table.getTableData.setInfiniteData({
         tableId,
         viewId: Number(viewId)
-      }, (old) => {
+        }, (old) => {
         if (!old) return old;
         return {
-          ...old,
-          pages: old.pages.map((page) => ({
+            ...old,
+            pages: old.pages.map((page) => ({
             ...page,
             cells: page.cells.map((cell) =>
-              cell.rowId === rowId && cell.columnId === columnId
+                cell.rowId === rowId && cell.columnId === columnId
                 ? { ...cell, value }
                 : cell
             ),
-          })),
+            })),
         };
-      });
+        });
 
-      return { prevData };
+        return { prevData };
     },
     onError: (_err, _vars, ctx) => {
-      if (ctx?.prevData) {
+        if (ctx?.prevData) {
         utils.table.getTableData.setInfiniteData({
-          tableId,
-          viewId: Number(viewId)
+            tableId,
+            viewId: Number(viewId)
         }, ctx.prevData);
-      }
+        }
     },
     onSettled: () => {
-      void utils.table.getTableData.invalidate();
-      void utils.view.getSearchTerm.invalidate({ viewId });
+        void utils.table.getTableData.invalidate();
+        void utils.view.getSearchTerm.invalidate({ viewId });
     },
-  });
+    });
 
-  useEffect(() => setInput(value), [value]);
+    useEffect(() => setInput(value), [value]);
 
-  useEffect(() => {
+    useEffect(() => {
     if (isFocused) {
-      setEditing(true);
-      inputRef.current?.focus();
+        setEditing(true);
+        inputRef.current?.focus();
     }
-  }, [isFocused]);
+    }, [isFocused]);
 
-  const handleSave = () => {
+    const handleSave = () => {
     setEditing(false);
     console.log(input + " : " + value);
 
     if (input === value) return;
 
     if (colType === "NUMBER" && isNaN(Number(input))) {
-      alert("Invalid input: this column expects a number.");
-      setInput(value);
-      return;
+        alert("Invalid input: this column expects a number.");
+        setInput(value);
+        return;
     }
-  
+
     setInput(input);
     updateCell.mutate({ rowId, columnId, value: input, tableId: Number(tableId) });
-  };
+    };
 
-  const content = React.useMemo(() => {
+    const content = React.useMemo(() => {
     if (!searchTerm) return input;
 
     const term = searchTerm.toLowerCase();
     if (!value.toLowerCase().includes(term)) return input;
 
     return input
-      .split(new RegExp(`(${term})`, "i"))
-      .map((part, i) =>
+        .split(new RegExp(`(${term})`, "i"))
+        .map((part, i) =>
         part.toLowerCase() === term ? (
-          <mark key={i}>{part}</mark>
+            <mark key={i}>{part}</mark>
         ) : (
-          part
+            part
         ),
-      );
-  }, [input, searchTerm]);
+        );
+    }, [input, searchTerm]);
 
-  const hasMatch = !!searchTerm && value.toLowerCase().includes(searchTerm.toLowerCase());
+    const hasMatch = !!searchTerm && value.toLowerCase().includes(searchTerm.toLowerCase());
 
-  const cellClass =
+    const cellClass =
     "w-[200px] px-3 py-2 text-sm text-gray-800 border-r border-gray-200 " +
     "overflow-hidden whitespace-nowrap text-ellipsis flex items-center " +
     (hasMatch ? "bg-amber-200/40" : "");
 
-  return (
+    return (
     <div
-      className={cellClass}
-      onClick={() => setEditing(true)}
+        className={cellClass}
+        onClick={() => setEditing(true)}
     >
-      {editing ? (
-        <input
-          ref={inputRef}
-          value={input}
-          autoFocus
-          onChange={(e) => setInput(e.target.value)}
-          onBlur={handleSave}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSave();
-            if (e.key === "Tab") {
-              e.preventDefault();
-              handleSave();
-              onTab(e.shiftKey ? "prev" : "next", rowId, columnId);
-            }
-          }}
-          className="w-full border px-1 py-0.5 rounded text-sm"
-        />
-      ) : (
-        <span className="truncate">{content}</span>
-      )}
+        {editing ? (
+            <input
+                ref={inputRef}
+                value={input}
+                autoFocus
+                onChange={(e) => setInput(e.target.value)}
+                onBlur={handleSave}
+                onKeyDown={(e) => {
+                if (e.key === "Enter") handleSave();
+                if (e.key === "Tab") {
+                    e.preventDefault();
+                    handleSave();
+                    onTab(e.shiftKey ? "prev" : "next", rowId, columnId);
+                }
+                }}
+                className="w-full border px-1 rounded text-sm"
+            />
+            ) : (
+            <span className="truncate">{content}</span>
+            )
+        }
     </div>
-  );
+    );
 }

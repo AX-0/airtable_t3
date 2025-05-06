@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { api } from "~/trpc/react";
 import { EditableCell } from "./EditableCell";
@@ -46,8 +46,8 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
   } = api.table.getTableData.useInfiniteQuery(
     { tableId: Number(tableId), limit: 1000, viewId: Number(viewId) },
     {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-      refetchOnWindowFocus: false,
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+        refetchOnWindowFocus: false,
     }
   );
 
@@ -67,16 +67,19 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
     count: rows.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 40,
-    overscan: 10,
+    overscan: 5,
+    getItemKey: index => rows[index]!.id, 
   });
 
+  const virtualItems = rowVirtualizer.getVirtualItems();
+
   useEffect(() => {
-    const [lastItem] = rowVirtualizer.getVirtualItems().slice(-1);
+    const [lastItem] = virtualItems.slice(-1);
     if (!lastItem) return;
-    if (lastItem.index >= rows.length - 300 && hasNextPage && !isFetchingNextPage) {
+    if (lastItem.index >= rows.length * 0.7 && hasNextPage && !isFetchingNextPage) {
       void fetchNextPage();
     }
-  }, [rowVirtualizer.getVirtualItems(), rows.length, hasNextPage, isFetchingNextPage]);
+  }, [virtualItems, rows.length, hasNextPage, isFetchingNextPage]);
 
   const {
     data: searchTermData,
@@ -84,6 +87,40 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
   } = api.view.getSearchTerm.useQuery(
     { viewId: Number(viewId) },
     { enabled: !!data }
+  );
+
+  const visibleCols = useMemo(
+    () => columns.filter(c => !hiddenColumns.includes(c.id)),
+    [columns, hiddenColumns],
+  )
+
+  const handleTab = useCallback(
+    (direction: 'next' | 'prev', rowId: number, colId: number) => {
+        const rowIndex = rows.findIndex((r) => r.id === rowId);
+        const colIndex = visibleCols.findIndex((c) => c.id === colId);
+
+        let nextRow = rowIndex;
+        let nextCol = direction === "next" ? colIndex + 1 : colIndex - 1;
+
+        if (nextCol >= visibleCols.length) {
+            nextCol = 0;
+            nextRow += 1;
+        } else if (nextCol < 0) {
+            nextRow -= 1;
+            nextCol = visibleCols.length - 1;
+        }
+
+        if (nextRow < 0 || nextRow >= rows.length) return;
+        const nextRowObj = rows[nextRow];
+        const nextColObj = visibleCols[nextCol];
+        if (!nextRowObj || !nextColObj) return;
+        
+        setFocusedCell({
+            row: Number(nextRowObj.id),
+            col: Number(nextColObj.id),
+        });
+    },
+    [columns, rows],          // <-- deps that really matter
   );
   
   const searchTerm = searchTermData ?? "";
@@ -111,31 +148,26 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
 
 
 
-        <div ref={parentRef} className="relative overflow-auto h-full w-full">
+        <div className="flex h-full">
 
-                {sidebarOpen && (
-                <div className="absolute top-0 left-0 z-40 h-full w-64 bg-white shadow-md border-r border-gray-200 transition-all duration-300">
-                <ViewSidebarPanel
+            {/* Sidebar */}
+            {sidebarOpen && (
+                <div className="w-64 h-full bg-white border-r z-40">
+                    <ViewSidebarPanel
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
                     views={views}
                     selectedViewId={viewId}
                     baseId={baseId}
-                />
+                    />
                 </div>
             )}
 
+            <div ref={parentRef} className="flex-1 overflow-auto relative">
             <div
-                className={
-                    `transition-all duration-300 
-                    ${
-                        sidebarOpen ? "ml-64" : "ml-0"
-                    }`
-                }
                 style={{
-                    height: `${rowVirtualizer.getTotalSize()}px`,
-                    width: "100%",
-                    position: "relative",
+                    height: rowVirtualizer.getTotalSize(),
+                    position: 'relative',
                 }}
             >
                 {/* Header Row */}
@@ -159,7 +191,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
                 </div>
 
                 {/* Data Rows */}
-                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                {virtualItems.map((virtualRow) => {
                     const row = rows[virtualRow.index];
                     if (!row) return null;
 
@@ -174,7 +206,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
                         {virtualRow.index + 1}
                     </div>
 
-                    {columns
+                    {visibleCols
                         .filter(col => !hiddenColumns.includes(col.id))
                         .map((col) => {
                         const cellKey = `${row.id}_${col.id}`;
@@ -182,7 +214,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
 
                         return (
                         <EditableCell
-                            key={col.id}
+                            key={`${row.id}_${col.id}`} 
                             rowId={row.id}
                             columnId={col.id}
                             value={value}
@@ -190,32 +222,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
                             isFocused={focusedCell?.row === row.id && focusedCell?.col === col.id}
                             viewId={viewId}
                             searchTerm={searchTerm}
-                            onTab={(direction) => {
-                            const rowIndex = rows.findIndex((r) => r.id === row.id);
-                            const colIndex = columns.findIndex((c) => c.id === col.id);
-
-                            let nextRow = rowIndex;
-                            let nextCol = direction === "next" ? colIndex + 1 : colIndex - 1;
-
-                            if (nextCol >= columns.length) {
-                                nextCol = 0;
-                                nextRow += 1;
-                            } else if (nextCol < 0) {
-                                nextRow -= 1;
-                                nextCol = columns.length - 1;
-                            }
-
-                            if (nextRow < 0 || nextRow >= rows.length) return;
-                            const nextRowObj = rows[nextRow];
-                            const nextColObj = columns[nextCol];
-                            if (!nextRowObj || !nextColObj) return;
-                            
-                            setFocusedCell({
-                                row: Number(nextRowObj.id),
-                                col: Number(nextColObj.id),
-                            });
-                            
-                            }}
+                            onTab={handleTab}
                         />
                         );
                     })}
@@ -225,6 +232,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
                     </div>
                     );
                 })}
+            </div>
             </div>
         </div>
     </div>

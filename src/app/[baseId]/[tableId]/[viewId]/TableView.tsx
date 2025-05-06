@@ -17,9 +17,9 @@ export default function TableView({ baseId, tableId, viewId }: Props) {
   return (
     <div className="flex flex-col h-screen">
       {/* <TableTabs tables={tables} selectedId={selectedTableId} onSelect={setSelectedTableId} /> */}
-      <div className="flex-1 overflow-hidden">
+      {/* <div className="flex-1 overflow-hidden"> */}
         <VirtualTable baseId={baseId} tableId={selectedTableId} viewId={viewId} />
-      </div>
+      {/* </div> */}
       {/* <TableToolbar tableId={selectedTableId} /> */}
     </div>
   );
