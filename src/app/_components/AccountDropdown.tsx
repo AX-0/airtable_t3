@@ -32,7 +32,7 @@ export default function AccountDropdown() {
   }, []);
 
   return (
-    <div className="relative drop-shadow-2xl">
+    <div className="relative">
       {/* trigger */}
       <button
         ref={buttonRef}
@@ -50,7 +50,7 @@ export default function AccountDropdown() {
         <div
           ref={menuRef}
           role="menu"
-          className="account-menu text-gray-800 absolute right-0 mt-2 w-72 rounded-xl bg-white shadow-xl ring-1 ring-black/5 p-2 space-y-1 text-sm"
+          className="account-menu text-gray-800 absolute right-0 mt-2 w-72 rounded-xl bg-white shadow-2xl ring-1 ring-black/5 p-2 space-y-1 text-sm"
         >
           <div className="px-4 py-3">
             <p className="text-black font-medium">{userName}</p>

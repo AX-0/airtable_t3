@@ -49,21 +49,21 @@ export default function TableTabs({ baseId, selectedTableId, color }: TableTabsP
   // console.log(nameById.get(selectedTableId));
 
   const bgColorClassMap: Record<string, string> = {
-    blue: "bg-blue-700",
-    red: "bg-red-700",
-    green: "bg-green-700",
-    yellow: "bg-yellow-700",
-    purple: "bg-purple-700",
-    gray: "bg-gray-700",
-    pink: "bg-pink-700",
-    orange: "bg-orange-700",
+    blue: "bg-blue-700/90",
+    red: "bg-red-700/90",
+    green: "bg-green-700/90",
+    yellow: "bg-yellow-700/90",
+    purple: "bg-purple-700/90",
+    gray: "bg-gray-700/90",
+    pink: "bg-pink-700/90",
+    orange: "bg-orange-700/90",
   };
 
   const bgClass = bgColorClassMap[color] ?? "bg-white";
 
   return (
     <>
-        <div className={`z-40 sticky flex items-center h-7 px-4 py-0.5 ${bgClass} inset-shadow-md text-gray-100`}>
+        <div className={`z-40 sticky flex items-center h-7 px-4 py-0.5 ${bgClass} text-gray-100`}>
 
             <div className="flex">
                 {isLoading ? (

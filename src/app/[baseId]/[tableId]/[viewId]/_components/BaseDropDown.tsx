@@ -71,7 +71,7 @@ export default function BaseDropdown({
     const deleteIsPending = deleteBase.isPending;
 
     return (
-        <div className="relative drop-shadow-2xl">
+        <div className="relative">
             {/* trigger */}
             <button 
                 ref={buttonRef}
@@ -89,7 +89,7 @@ export default function BaseDropdown({
                 <div
                     ref={menuRef}
                     role="menu"
-                    className="account-menu text-gray-800 fixed left-4 mt-2 w-80 rounded-xl bg-white shadow-xl ring-1 ring-black/5 p-2 space-y-1 text-sm"
+                    className="account-menu text-gray-800 fixed left-4 mt-2 w-80 rounded-xl bg-white shadow-2xl ring-1 ring-black/5 p-2 space-y-1 text-sm"
                 >
                     <div className="flex items-center justify-between px-4 py-3">
                         <input

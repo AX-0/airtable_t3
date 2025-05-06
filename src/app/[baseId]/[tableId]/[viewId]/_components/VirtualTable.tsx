@@ -93,7 +93,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
 
     
     // minus nav bar height
-    <div ref={parentRef} className="overflow-auto h-[calc(100vh-6.5rem)] w-full border-t">
+    <div ref={parentRef} className="overflow-auto h-[calc(100vh-6.5rem)] w-full">
       <UtilBar
         baseId={baseId}
         tableId={tableId}

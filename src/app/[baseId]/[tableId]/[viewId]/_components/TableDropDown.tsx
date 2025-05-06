@@ -75,7 +75,7 @@ export default function TableDropdown({baseId, table, onlyTable} : Props) {
   return (
     <>
 
-    <div className="relative drop-shadow-2xl">
+    <div className="relative">
         {/* trigger */}
         <button
             ref={buttonRef}

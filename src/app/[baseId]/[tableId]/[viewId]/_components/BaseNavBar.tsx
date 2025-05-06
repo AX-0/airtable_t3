@@ -59,7 +59,7 @@ export default function BaseNavbar({
     // console.log(bgClass);
 
     return (
-        <nav className={`sticky top-0 z-50 flex items-center justify-between w-full h-13 px-4 shadow-sm text-white ${bgClass}`}>
+        <nav className={`sticky top-0 z-50 flex items-center justify-between w-full h-13 px-4 text-white ${bgClass}`}>
             {/* Left */}
             <div className="flex items-center justify-between gap-4">
                 <div
