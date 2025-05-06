@@ -6,7 +6,6 @@ import Link from "next/link";
 
 import AccountDropdown from "~/app/_components/AccountDropdown";
 
-import { useSession  } from "next-auth/react"
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
@@ -101,10 +100,10 @@ export default function BaseNavbar({ baseId }: Props) {
 
             {/* Right */}
             <div className="flex items-center gap-4">
-            <HelpCircle className="w-5 h-5" />
-            <Bell className="w-5 h-5" />
+                <HelpCircle className="w-5 h-5" />
+                <Bell className="w-5 h-5" />
 
-            <AccountDropdown />
+                <AccountDropdown />
             </div>
         </nav>
     );
