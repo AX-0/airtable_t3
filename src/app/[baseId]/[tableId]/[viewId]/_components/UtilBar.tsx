@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Filter, EyeOff, SortAsc, Plus } from "lucide-react";
+import { ChevronDown, Filter, EyeOff, SortAsc, Plus, Menu } from "lucide-react";
 import FilterPanel from "./UtilPanelFilter";
 import HideFieldsPanel from "./UtilPanelHideFields";
 import SortPanel from "./UtilPanelSort";
@@ -8,6 +8,7 @@ import CellSearch from "./CellSearch"
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
+import ViewSidebarPanel from "./ViewSideBar";
 
 type Props = {
     baseId: number;
@@ -17,9 +18,10 @@ type Props = {
     columns: { id: number; name: string }[];
     setHiddenColumns: (columnId: number) => void;
     searchTerm: string;
+    toggleSidebar: () => void;
 };
 
-export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, columns, setHiddenColumns, searchTerm }: Props) {
+export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, columns, setHiddenColumns, searchTerm, toggleSidebar }: Props) {
 
     const {data: views = [], isLoading} = api.view.getAllView.useQuery({tableId: Number(tableId)});
 
@@ -44,10 +46,12 @@ export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, column
         },
     });
 
+    // const [sidebarOpen, setSidebarOpen] = useState(false);
+
     return (
         <div className="flex items-center justify-between h-10 px-4 py-1 border-b border-gray-200 bg-white shadow-sm text-sm">
             <div className="flex items-center gap-2">
-                <select 
+                {/* <select 
                     className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700" 
                     value={viewId}
                     onChange={(e) => {
@@ -63,13 +67,17 @@ export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, column
                             <option key={view.id} value={view.id}>{view.name}</option>
                         ))
                     }
-                </select>
+                </select> */}
 
-                {/* <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700">
-                <EyeOff className="w-4 h-4" />
-                Hide Fields
-                <ChevronDown className="w-4 h-4" />
-                </button> */}
+
+
+                <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700"
+                    onClick={toggleSidebar}>
+                    <Menu className="w-5 h-5" />
+                    Views
+                </button>
+
+                <div className="w-px h-4 bg-gray-400" />
 
                 <HideFieldsPanel
                     viewId={viewId}

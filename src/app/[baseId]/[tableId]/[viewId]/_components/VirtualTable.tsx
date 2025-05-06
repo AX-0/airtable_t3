@@ -6,6 +6,7 @@ import { api } from "~/trpc/react";
 import { EditableCell } from "./EditableCell";
 import EditableColumnHeader from "./EditableColumnHeader";
 import UtilBar from "./UtilBar";
+import ViewSidebarPanel from "./ViewSideBar";
 
 interface Props {
   baseId: number;
@@ -87,114 +88,145 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
   
   const searchTerm = searchTermData ?? "";
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const toggleSidebar = () => setSidebarOpen(prev => !prev);
+  const {data: views = []} = api.view.getAllView.useQuery({tableId: Number(tableId)});
+  
   if (isLoading) return <div className="p-4 text-gray-600">Loading table...</div>;
+  
 
   return (
-
-    
     // minus nav bar height
-    <div ref={parentRef} className="overflow-auto h-[calc(100vh-6.5rem)] w-full">
-      <UtilBar
-        baseId={baseId}
-        tableId={tableId}
-        viewId={viewId}
-        hiddenColumns={hiddenColumns}
-        columns={columns}
-        setHiddenColumns={toggleHiddenColumn}
-        searchTerm={searchTerm}
-      />
-      
-      
-      <div
-        style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}
-      >
-        {/* Header Row */}
-        <div className="sticky top-0 z-10 flex bg-gray-100 border-b border-gray-300 text-sm text-gray-700 font-medium">
-          <div className="w-[100px] px-3 py-2 border-r bg-white text-center">#</div>
-          {columns
-            .filter(col => !hiddenColumns.includes(col.id))
-            .map((col) => (
-              <EditableColumnHeader
-                key={col.id}
-                columnId={col.id}
-                name={col.name}
-                tableId={tableId}
-                viewId={viewId}
-              />
-          ))}
+    <div className="relative h-[calc(100vh-5rem)] w-full overflow-hidden">
+        <UtilBar
+            baseId={baseId}
+            tableId={tableId}
+            viewId={viewId}
+            hiddenColumns={hiddenColumns}
+            columns={columns}
+            setHiddenColumns={toggleHiddenColumn}
+            searchTerm={searchTerm}
+            toggleSidebar={toggleSidebar}
+        />
 
-          <EditableColumnHeader tableId={tableId} viewId={viewId} isAddColumn />
 
-        </div>
 
-        {/* Data Rows */}
-        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-          const row = rows[virtualRow.index];
-          if (!row) return null;
+        <div ref={parentRef} className="relative overflow-auto h-full w-full">
 
-          return (
-            <div
-              key={row.id}
-              className="flex absolute left-0 w-full border-t border-gray-200"
-              style={{ transform: `translateY(${virtualRow.start}px)` }}
-            >
-
-            <div className="w-[100px] px-3 py-2 border-r bg-gray-50">
-              {virtualRow.index + 1}
-            </div>
-
-            {columns
-              .filter(col => !hiddenColumns.includes(col.id))
-              .map((col) => {
-                const cellKey = `${row.id}_${col.id}`;
-                const value = cellMap.get(cellKey) ?? "";
-
-              return (
-                <EditableCell
-                  key={col.id}
-                  rowId={row.id}
-                  columnId={col.id}
-                  value={value}
-                  tableId={tableId}
-                  isFocused={focusedCell?.row === row.id && focusedCell?.col === col.id}
-                  viewId={viewId}
-                  searchTerm={searchTerm}
-                  onTab={(direction) => {
-                    const rowIndex = rows.findIndex((r) => r.id === row.id);
-                    const colIndex = columns.findIndex((c) => c.id === col.id);
-
-                    let nextRow = rowIndex;
-                    let nextCol = direction === "next" ? colIndex + 1 : colIndex - 1;
-
-                    if (nextCol >= columns.length) {
-                      nextCol = 0;
-                      nextRow += 1;
-                    } else if (nextCol < 0) {
-                      nextRow -= 1;
-                      nextCol = columns.length - 1;
-                    }
-
-                    if (nextRow < 0 || nextRow >= rows.length) return;
-                    const nextRowObj = rows[nextRow];
-                    const nextColObj = columns[nextCol];
-                    if (!nextRowObj || !nextColObj) return;
-                    
-                    setFocusedCell({
-                      row: Number(nextRowObj.id),
-                      col: Number(nextColObj.id),
-                    });
-                    
-                  }}
+                {sidebarOpen && (
+                <div className="absolute top-0 left-0 z-40 h-full w-64 bg-white shadow-md border-r border-gray-200 transition-all duration-300">
+                <ViewSidebarPanel
+                    isOpen={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
+                    views={views}
+                    selectedViewId={viewId}
+                    baseId={baseId}
                 />
-              );
-            })}
+                </div>
+            )}
 
-            <div className="w-[200px] px-3 py-2 border-r" />
+            <div
+                className={
+                    `transition-all duration-300 
+                    ${
+                        sidebarOpen ? "ml-64" : "ml-0"
+                    }`
+                }
+                style={{
+                    height: `${rowVirtualizer.getTotalSize()}px`,
+                    width: "100%",
+                    position: "relative",
+                }}
+            >
+                {/* Header Row */}
+                <div className="sticky top-0 z-10 flex bg-gray-100 border-b border-gray-300 text-sm text-gray-700 font-medium">
+                    <div className="w-[100px] px-3 py-2 border-r bg-white text-center">#</div>
+                    
+                    {columns
+                    .filter(col => !hiddenColumns.includes(col.id))
+                    .map((col) => (
+                        <EditableColumnHeader
+                        key={col.id}
+                        columnId={col.id}
+                        name={col.name}
+                        tableId={tableId}
+                        viewId={viewId}
+                        />
+                    ))}
 
+                    <EditableColumnHeader tableId={tableId} viewId={viewId} isAddColumn />
+
+                </div>
+
+                {/* Data Rows */}
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const row = rows[virtualRow.index];
+                    if (!row) return null;
+
+                    return (
+                    <div
+                        key={row.id}
+                        className="flex absolute left-0 w-full border-t border-gray-200"
+                        style={{ transform: `translateY(${virtualRow.start}px)` }}
+                    >
+
+                    <div className="w-[100px] px-3 py-2 border-r bg-gray-50">
+                        {virtualRow.index + 1}
+                    </div>
+
+                    {columns
+                        .filter(col => !hiddenColumns.includes(col.id))
+                        .map((col) => {
+                        const cellKey = `${row.id}_${col.id}`;
+                        const value = cellMap.get(cellKey) ?? "";
+
+                        return (
+                        <EditableCell
+                            key={col.id}
+                            rowId={row.id}
+                            columnId={col.id}
+                            value={value}
+                            tableId={tableId}
+                            isFocused={focusedCell?.row === row.id && focusedCell?.col === col.id}
+                            viewId={viewId}
+                            searchTerm={searchTerm}
+                            onTab={(direction) => {
+                            const rowIndex = rows.findIndex((r) => r.id === row.id);
+                            const colIndex = columns.findIndex((c) => c.id === col.id);
+
+                            let nextRow = rowIndex;
+                            let nextCol = direction === "next" ? colIndex + 1 : colIndex - 1;
+
+                            if (nextCol >= columns.length) {
+                                nextCol = 0;
+                                nextRow += 1;
+                            } else if (nextCol < 0) {
+                                nextRow -= 1;
+                                nextCol = columns.length - 1;
+                            }
+
+                            if (nextRow < 0 || nextRow >= rows.length) return;
+                            const nextRowObj = rows[nextRow];
+                            const nextColObj = columns[nextCol];
+                            if (!nextRowObj || !nextColObj) return;
+                            
+                            setFocusedCell({
+                                row: Number(nextRowObj.id),
+                                col: Number(nextColObj.id),
+                            });
+                            
+                            }}
+                        />
+                        );
+                    })}
+
+                    <div className="w-[200px] px-3 py-2 border-r" />
+
+                    </div>
+                    );
+                })}
             </div>
-          );
-        })}
-      </div>
+        </div>
     </div>
   );
 }
