@@ -140,6 +140,7 @@ export const baseRouter = createTRPCRouter({
       const [base] = await ctx.db.insert(bases).values({
         name,
         ownerId: ctx.session.user.id,
+        color: "blue",
       }).returning({ id: bases.id });
 
       const baseId = base?.id;
@@ -243,4 +244,20 @@ export const baseRouter = createTRPCRouter({
           },
         });
       }),
-  });
+    
+    getBase: protectedProcedure
+      .input(z.object({ baseId: z.number() }))
+      .query(async ({input, ctx}) => {
+        return ctx.db.query.bases.findFirst({
+          where: (bases, { eq }) => eq(bases.id, input.baseId),
+          columns: {
+            id: true,
+            name: true,
+            ownerId: true,
+            // createdAt: true,
+            // updatedAt: true,
+            color: true,
+          },
+        });
+      }),
+});

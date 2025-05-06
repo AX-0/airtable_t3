@@ -1,67 +1,60 @@
 "use client";
 
-import { Menu as MenuIcon, Search, HelpCircle, Bell, Home, Settings, LogOut, AppWindow, Store, Upload, PlusCircle, Plus, ChevronDown, Star } from "lucide-react"; // Lucide icons
+import { Menu as MenuIcon, Search, HelpCircle, Bell, Home, Settings, LogOut, AppWindow, Store, Upload, PlusCircle, Plus, ChevronDown, Star, Notebook, ArrowLeft } from "lucide-react"; // Lucide icons
 import Image from "next/image";
 import Link from "next/link";
-// import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
 
 import AccountDropdown from "./AccountDropdown";
 
 import { useSession  } from "next-auth/react"
 import { useState } from "react";
+import { api } from "~/trpc/react";
+import { useRouter } from "next/navigation";
 
-export default function HomeNavbar({
-  setCollapsed,
-}: {
-  setCollapsed: React.Dispatch<React.SetStateAction<boolean>> | null;
-}) {
-  const { data: session, status } = useSession();
+type Props = {
+    setCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
+};
 
-  if (!session && status !== "loading") return null;
+export default function HomeNavbar({ setCollapsed }: Props) {
+    const [hovered, setHovered] = useState(false);
+    const { data: session, status } = useSession();
 
-  return (
-    <nav className="sticky top-0 z-50 flex items-center justify-between w-full h-16 px-4 bg-white shadow-sm">
-      
-      {/* Left */}
-      <div className="flex items-center gap-8">
+    const router = useRouter();
 
-        {setCollapsed ?
-          <button onClick={() => setCollapsed(prev => !prev)}>
-          <MenuIcon className="w-6 h-6 cursor-pointer" />
-          </button> 
-          :
-          ""
-        }
-        
+    if (!session && status !== "loading") return null;
 
-        <Link href="/">
-          <Image src="/logo.png" alt="Logo" width={120} height={32} className="cursor-pointer" />
-        </Link>
-      </div>
-
-      {/* Middle, search //TODO */}
-      <div className="flex justify-center w-full px-4 flex-1 max-w-lg mx-8">
-        {setCollapsed ?
-            <div className="flex items-center w-[300px] px-4 py-2 bg-white border-2 border-gray-200 rounded-full cursor-pointer">
-              <Search className="w-5 h-5 text-gray-500" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="flex-1 bg-transparent border-none outline-none px-2 text-sm"
-              />
+    return (
+        <nav className={`sticky top-0 z-50 flex items-center justify-between w-full h-12 px-4 shadow-sm bg-white`}>
+            
+            {/* Left */}
+            <div className="flex items-center justify-between gap-8">
+            <button onClick={() => setCollapsed(prev => !prev)}>
+                <MenuIcon className="w-6 h-6 cursor-pointer" />
+            </button>
+            <Link href="/">
+                <Image src="/logo.png" alt="Logo" width={120} height={32} className="cursor-pointer" />
+            </Link>
             </div>
-            :
-            ""
-        }
-      </div>
 
-      {/* Right */}
-      <div className="flex items-center gap-4">
-        <HelpCircle className="w-5 h-5 text-gray-800" />
-        <Bell className="w-5 h-5 text-gray-800" />
+            {/* Middle, search //TODO */}
+            <div className="flex justify-center w-full px-4 flex-1 max-w-lg mx-8">
+                <div className="flex items-center w-[300px] px-4 py-2 bg-white border-2 border-gray-200 rounded-full cursor-pointer">
+                    <Search className="w-5 h-5 text-gray-500" />
+                    <input
+                    type="text"
+                    placeholder="Search..."
+                    className="flex-1 bg-transparent border-none outline-none px-2 text-sm"
+                    />
+                </div>
+            </div>
 
-        <AccountDropdown />
-      </div>
-    </nav>
-  );
+            {/* Right */}
+            <div className="flex items-center gap-4">
+            <HelpCircle className="w-5 h-5 text-gray-800" />
+            <Bell className="w-5 h-5 text-gray-800" />
+
+            <AccountDropdown />
+            </div>
+        </nav>
+    );
 }

@@ -121,6 +121,7 @@ export const bases = createTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+    color: d.varchar({length:100}),
   }),
   // (t) => [
   //   index("owner_idx").on(t.ownerId),
