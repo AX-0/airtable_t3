@@ -17,36 +17,32 @@ export default function BaseDropdown({
     } | null;
     onColorChange: (color: string) => void;
 }) {
-    if (!base) return null;
-
     const utils = api.useUtils();
     const router = useRouter();
 
     const [name, setName] = useState<string | null>(base?.name ?? null);
-
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
     const [open, setOpen] = useState(false);
     const menuRef   = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
-
-    // close on click-out / Esc
+    
     useEffect(() => {
-    function onClick(e: MouseEvent) {
-        if (!menuRef.current?.contains(e.target as Node) &&
-            !buttonRef.current?.contains(e.target as Node))
-        setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-        if (e.key === "Escape") setOpen(false);
-    }
-    window.addEventListener("click", onClick);
-    window.addEventListener("keydown", onKey);
-    return () => {
-        window.removeEventListener("click", onClick);
-        window.removeEventListener("keydown", onKey);
-    };
+        function onClick(e: MouseEvent) {
+        if (!menuRef.current?.contains(e.target as Node) && !buttonRef.current?.contains(e.target as Node))
+            setOpen(false);
+        }
+        function onKey(e: KeyboardEvent) {
+            if (e.key === "Escape") setOpen(false);
+        }
+        window.addEventListener("click", onClick);
+        window.addEventListener("keydown", onKey);
+        return () => {
+            window.removeEventListener("click", onClick);
+            window.removeEventListener("keydown", onKey);
+        };
     }, []);
+
+    if (!base) return null;
 
     const updateColor = api.base.updateColor.useMutation({
         onSuccess: async () => {

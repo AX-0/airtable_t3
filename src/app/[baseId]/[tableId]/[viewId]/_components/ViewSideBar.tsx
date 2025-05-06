@@ -31,8 +31,6 @@ export default function ViewSidebarPanel({
     selectedViewId: number;
     baseId: number
 }) {
-    if (!isOpen) return null;
-
     const utils = api.useUtils();
     const router = useRouter();
 
@@ -61,6 +59,8 @@ export default function ViewSidebarPanel({
           router.push(`/${baseId}/${views[0]?.tableId}/${newView.id}`);
         },
     });
+
+    if (!isOpen) return null;
 
     console.log(selectedViewId);
 
