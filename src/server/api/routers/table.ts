@@ -439,4 +439,17 @@ export const tableRouter = createTRPCRouter({
 
     return { success: true };
   }),
+
+  updateTable: protectedProcedure
+      .input(z.object({
+          id: z.number(),
+          name: z.string().min(1),
+      })
+      )
+      .mutation(async ({ ctx, input }) => {
+      return await db
+          .update(tables)
+          .set({ name: input.name })
+          .where(eq(tables.id, input.id));
+  }),
 }) 

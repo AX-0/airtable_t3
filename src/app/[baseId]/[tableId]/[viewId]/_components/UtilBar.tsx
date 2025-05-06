@@ -45,7 +45,7 @@ export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, column
     });
 
     return (
-        <div className="flex items-center justify-between h-12 px-4 py-1 border-b bg-black shadow-sm text-sm">
+        <div className="flex items-center justify-between h-10 px-4 py-1 border-b border-gray-200 bg-white shadow-sm text-sm">
             <div className="flex items-center gap-2">
                 <select 
                     className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700" 

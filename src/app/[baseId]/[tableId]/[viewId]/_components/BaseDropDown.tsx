@@ -71,7 +71,7 @@ export default function BaseDropdown({
     const deleteIsPending = deleteBase.isPending;
 
     return (
-        <div className="relative">
+        <div className="relative drop-shadow-2xl">
             {/* trigger */}
             <button 
                 ref={buttonRef}
@@ -137,7 +137,7 @@ export default function BaseDropdown({
             {showDeleteConfirm && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                 <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-gray-800">
-                    
+
                     <h2 className="text-lg font-semibold mb-2">Are you sure you want to delete <span className="font-bold">{base.name}</span>?</h2>
                     
                     <div className="flex justify-end gap-3">

@@ -24,7 +24,7 @@ export default function HomeNavbar({ setCollapsed }: Props) {
     if (!session && status !== "loading") return null;
 
     return (
-        <nav className={`sticky top-0 z-50 flex items-center justify-between w-full h-14 px-4 shadow-sm bg-white`}>
+        <nav className={`sticky top-0 z-50 flex items-center justify-between w-full h-13 px-4 shadow-sm bg-white`}>
             
             {/* Left */}
             <div className="flex items-center justify-between gap-8">

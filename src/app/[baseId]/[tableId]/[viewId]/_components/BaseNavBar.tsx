@@ -15,21 +15,33 @@ type Props = {
     baseId: number;
 };
 
-export default function BaseNavbar({ baseId }: Props) {
+export default function BaseNavbar({
+    base,
+    color,
+    setColor,
+} : {
+    base: {
+        color: string | null;
+        id: number;
+        name: string | null;
+        ownerId: string;
+    } | null;
+    color: string;
+    setColor: React.Dispatch<React.SetStateAction<string>>;
+}) {
     const [hovered, setHovered] = useState(false);
     const router = useRouter();
   
-    const { data: baseQ, isLoading } = api.base.getBase.useQuery(
-        { baseId: Number(baseId) },
-        { enabled: baseId !== null && baseId !== undefined }
-    );
+    // const { data: baseQ, isLoading } = api.base.getBase.useQuery(
+    //     { baseId: Number(baseId) },
+    //     { enabled: baseId !== null && baseId !== undefined }
+    // );
   
-    const base = baseQ ?? null;
+    // const base = baseQ ?? null;
 
-    
-    const [color, setColor] = useState<string>(base?.color ?? "blue");
+    // const [color, setColor] = useState<string>(base?.color ?? "blue");
 
-    if (isLoading || !baseQ) return null;
+    // if (isLoading || !baseQ) return null;
   
     const bgColorClassMap: Record<string, string> = {
       blue: "bg-blue-500",
@@ -47,7 +59,7 @@ export default function BaseNavbar({ baseId }: Props) {
     // console.log(bgClass);
 
     return (
-        <nav className={`sticky top-0 z-50 flex items-center justify-between w-full h-14 px-4 shadow-sm text-white ${bgClass}`}>
+        <nav className={`sticky top-0 z-50 flex items-center justify-between w-full h-13 px-4 shadow-sm text-white ${bgClass}`}>
             {/* Left */}
             <div className="flex items-center justify-between gap-4">
                 <div
@@ -61,7 +73,7 @@ export default function BaseNavbar({ baseId }: Props) {
                         {!hovered && <Notebook className="w-5 h-5" />}
                     </div>
 
-                    <div className={`absolute transition-opacity duration-200 ease-in-out ${hovered ? "opacity-100" : "opacity-0"}`}>
+                    <div title="Go home" className={`absolute transition-opacity duration-200 ease-in-out ${hovered ? "opacity-100" : "opacity-0"}`}>
                         <ArrowLeft className={`w-3 h-3 text-black`} strokeWidth={2.5} />
                     </div>
 

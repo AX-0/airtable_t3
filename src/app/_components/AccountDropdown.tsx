@@ -32,7 +32,7 @@ export default function AccountDropdown() {
   }, []);
 
   return (
-    <div className="relative">
+    <div className="relative drop-shadow-2xl">
       {/* trigger */}
       <button
         ref={buttonRef}
@@ -40,6 +40,7 @@ export default function AccountDropdown() {
         aria-expanded={open}
         onClick={() => setOpen(!open)}
         className="w-8 h-8 rounded-full bg-orange-600 text-white flex items-center justify-center cursor-pointer"
+        title="Account"
       >
         {(!userName) ? <User className="w-4 h-4" /> : userName[0]}
       </button>

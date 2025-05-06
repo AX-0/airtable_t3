@@ -1,4 +1,5 @@
 import TableView from "./TableView";
+import BaseHeader from "./_components/BaseHeader";
 import TableTabs from "./_components/TableTabs"
 import UtilBar from "./_components/UtilBar"
 
@@ -18,9 +19,11 @@ export default async function ViewPage({
 
   return (
     <>
-    <BaseNavbar baseId={baseId} />
+
+    <BaseHeader baseId={baseId} tableId={tableId} viewId={viewId} />
+    {/* <BaseNavbar baseId={baseId} />
     
-    <TableTabs baseId={baseId} selectedTableId={tableId} viewId={viewId}/>
+    <TableTabs baseId={baseId} selectedTableId={tableId} viewId={viewId}/> */}
 
     {/* <UtilBar
       baseId={baseId}
