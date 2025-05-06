@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Filter, EyeOff, SortAsc, Plus, Menu } from "lucide-react";
+import { ChevronDown, Filter, EyeOff, SortAsc, Plus, Menu, Table2 } from "lucide-react";
 import FilterPanel from "./UtilPanelFilter";
 import HideFieldsPanel from "./UtilPanelHideFields";
 import SortPanel from "./UtilPanelSort";
@@ -22,9 +22,6 @@ type Props = {
 };
 
 export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, columns, setHiddenColumns, searchTerm, toggleSidebar }: Props) {
-
-    const {data: views = [], isLoading} = api.view.getAllView.useQuery({tableId: Number(tableId)});
-
     const [showInput, setShowInput] = useState(false);
     const [newViewName, setNewViewName] = useState("");
 
@@ -46,31 +43,13 @@ export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, column
         },
     });
 
+    const {data: viewName} = api.view.getName.useQuery({viewId: Number(viewId)});
+
     // const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
         <div className="flex items-center justify-between h-10 px-4 py-1 border-b border-gray-200 bg-white shadow-sm text-sm">
             <div className="flex items-center gap-2">
-                {/* <select 
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700" 
-                    value={viewId}
-                    onChange={(e) => {
-                        const selectedViewId = Number(e.target.value);
-
-                        if (viewId != selectedViewId) {
-                            router.push(`/${baseId}/${tableId}/${selectedViewId}`);
-                        }
-                    }}
-                >
-                    {
-                        views.map((view) => (
-                            <option key={view.id} value={view.id}>{view.name}</option>
-                        ))
-                    }
-                </select> */}
-
-
-
                 <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700"
                     onClick={toggleSidebar}>
                     <Menu className="w-5 h-5" />
@@ -78,6 +57,14 @@ export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, column
                 </button>
 
                 <div className="w-px h-4 bg-gray-400" />
+
+                <div 
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-md hover:bg-gray-200 text-gray-700"
+                    title="Current View"
+                >
+                    <Table2 className="w-4 h-4 text-blue-500" />
+                    <span className="flex-1 truncate">{viewName}</span>
+                </div>
 
                 <HideFieldsPanel
                     viewId={viewId}
