@@ -112,7 +112,7 @@ export function EditableCell({
             .split(new RegExp(`(${term})`, "i"))
             .map((part, i) =>
                 part.toLowerCase() === term ? (
-                    <mark className="bg-amber-200/40" key={i}>{part}</mark>
+                    <mark key={i}>{part}</mark>
                 ) : (
                     part
                 ),
@@ -130,6 +130,8 @@ export function EditableCell({
         bgClass = "bg-green-100";
     } else if (isSorted) {
         bgClass = "bg-red-100";
+    } else if (hasMatch) {
+        bgClass = "bg-amber-200/40"
     }
 
     const cellClass =
