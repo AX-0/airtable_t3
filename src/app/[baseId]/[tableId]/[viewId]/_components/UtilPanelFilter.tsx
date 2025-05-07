@@ -6,16 +6,16 @@ import { api } from "~/trpc/react";
 import { useEffect, useState } from "react";
 
 type Props = {
-  tableId: number;
-  viewId: number;
-  filters: FilterCondition[];
-  setFilters: React.Dispatch<React.SetStateAction<FilterCondition[]>>;
+    tableId: number;
+    viewId: number;
+    filters: FilterCondition[];
+    setFilters: React.Dispatch<React.SetStateAction<FilterCondition[]>>;
 };
 
 type FilterCondition = {
-  columnId: number | null;
-  operator: string;
-  value: string;
+    columnId: number | null;
+    operator: string;
+    value: string;
 };
 
 export default function FilterPanel({ tableId, viewId, filters, setFilters }: Props) {
@@ -63,8 +63,6 @@ export default function FilterPanel({ tableId, viewId, filters, setFilters }: Pr
             void utils.view.getFilters.invalidate();
         }
     });
-
-    const bgClass = (filters.length > 0) ? "bg-green-200" : "bg-white"
 
     return (
     <UtilPanel

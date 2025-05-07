@@ -21,6 +21,8 @@ type Props = {
     toggleSidebar: () => void;
     filters: FilterCondition[];
     setFilters: React.Dispatch<React.SetStateAction<FilterCondition[]>>;
+    sorts: SortCondition[];
+    setSorts: React.Dispatch<React.SetStateAction<SortCondition[]>>;
 };
 
 type FilterCondition = {
@@ -29,7 +31,12 @@ type FilterCondition = {
     value: string;
 };
 
-export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, columns, setHiddenColumns, searchTerm, toggleSidebar, filters, setFilters }: Props) {
+type SortCondition = {
+    columnId: number | null;
+    direction: "asc" | "desc";
+};
+
+export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, columns, setHiddenColumns, searchTerm, toggleSidebar, filters, setFilters, sorts, setSorts }: Props) {
     const [showInput, setShowInput] = useState(false);
     const [newViewName, setNewViewName] = useState("");
 
@@ -83,7 +90,7 @@ export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, column
 
                 <FilterPanel tableId={tableId} viewId={viewId} filters={filters} setFilters={setFilters}/>
 
-                <SortPanel tableId={tableId} viewId={viewId}/>
+                <SortPanel tableId={tableId} viewId={viewId} sorts={sorts} setSorts={setSorts}/>
             </div>
 
 

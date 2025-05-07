@@ -20,6 +20,11 @@ type FilterCondition = {
   value: string;
 };
 
+type SortCondition = {
+    columnId: number | null;
+    direction: "asc" | "desc";
+};
+
 export function VirtualTable({ baseId, tableId, viewId }: Props) {
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -136,6 +141,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
   const {data: views = []} = api.view.getAllView.useQuery({tableId: Number(tableId)});
 
   const [filters, setFilters] = useState<FilterCondition[]>([]);
+  const [sorts, setSorts] = useState<SortCondition[]>([]);
   
   if (isLoading) return <div className="p-4 text-gray-600">Loading table...</div>;
   
@@ -153,7 +159,9 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
             searchTerm={searchTerm}
             toggleSidebar={toggleSidebar} 
             filters={filters} 
-            setFilters={setFilters}        
+            setFilters={setFilters}  
+            sorts={sorts}
+            setSorts={setSorts}      
         />
 
 
@@ -189,6 +197,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
                         .map((col) => {
 
                             const isFiltered = filters.some(f => f.columnId === col.id);
+                            const isSorted = sorts.some(f => f.columnId === col.id);
 
                             return (
                                 <EditableColumnHeader
@@ -198,7 +207,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
                                     tableId={tableId}
                                     viewId={viewId}
                                     isFiltered={isFiltered}
-                                    isSorted={false}
+                                    isSorted={isSorted}
                                 />
                             )
                         })
@@ -231,6 +240,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
                         const value = cellMap.get(cellKey) ?? "";
 
                         const isFiltered = filters.some(f => f.columnId === col.id);
+                        const isSorted = sorts.some(f => f.columnId === col.id);
 
                         return (
                             <EditableCell
@@ -244,7 +254,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
                                 searchTerm={searchTerm}
                                 onTab={handleTab}
                                 isFiltered={isFiltered}
-                                isSorted={false}
+                                isSorted={isSorted}
                             />
                         );
                     })}
