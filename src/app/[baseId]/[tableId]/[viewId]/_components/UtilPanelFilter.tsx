@@ -64,10 +64,15 @@ export default function FilterPanel({ tableId, viewId, filters, setFilters }: Pr
         }
     });
 
+    let bgClass = "bg-white hover:bg-gray-200"
+    if (filters.length > 0) {
+        bgClass = "bg-green-200 hover:bg-green-300"
+    }
+
     return (
     <UtilPanel
         trigger={
-        <div className={`flex items-center gap-1 px-3 py-1.5 rounded-md ${(filters.length > 0) ? "bg-green-200" : "bg-white"} hover:bg-gray-200 transition text-gray-700`}>
+        <div className={`flex items-center gap-1 px-3 py-1.5 rounded-md ${bgClass} transition text-gray-700`}>
             <Filter className="w-4 h-4" />
                 Filter
             <ChevronDown className="w-4 h-4" />

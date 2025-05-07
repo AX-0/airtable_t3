@@ -64,10 +64,15 @@ export default function SortPanel({ tableId, viewId, sorts, setSorts }: Props) {
             }[],
         });
 
+    let bgClass = "bg-white hover:bg-gray-200"
+    if (sorts.length > 0) {
+        bgClass = "bg-red-200 hover:bg-red-300"
+    }
+
     return (
         <UtilPanel
             trigger={
-            <div className={`flex items-center gap-1 px-3 py-1.5 rounded-md ${(sorts.length > 0) ? "bg-red-200" : "bg-white"} hover:bg-gray-200 transition text-gray-700`}>
+            <div className={`flex items-center gap-1 px-3 py-1.5 rounded-md ${bgClass} transition text-gray-700`}>
                 <ArrowUpDown className="w-4 h-4" />
                     Sort
                 <ChevronDown className="w-4 h-4" />

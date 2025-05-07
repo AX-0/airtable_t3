@@ -47,10 +47,15 @@ export default function HideFieldsPanel({
     });
   };
 
+  let bgClass = "bg-white hover:bg-gray-200"
+  if (hiddenColumns.length > 0) {
+    bgClass = "bg-blue-200 hover:bg-blue-300"
+  }
+
   return (
     <UtilPanel
       trigger={
-        <div className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700">
+        <div className={`flex items-center gap-1 px-3 py-1.5 rounded-md ${bgClass} transition text-gray-700`}>
           <EyeOff className="w-4 h-4" />
           Hide Fields
           <ChevronDown className="w-4 h-4" />
