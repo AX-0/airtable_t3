@@ -19,9 +19,17 @@ type Props = {
     setHiddenColumns: (columnId: number) => void;
     searchTerm: string;
     toggleSidebar: () => void;
+    filters: FilterCondition[];
+    setFilters: React.Dispatch<React.SetStateAction<FilterCondition[]>>;
 };
 
-export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, columns, setHiddenColumns, searchTerm, toggleSidebar }: Props) {
+type FilterCondition = {
+    columnId: number | null;
+    operator: string;
+    value: string;
+};
+
+export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, columns, setHiddenColumns, searchTerm, toggleSidebar, filters, setFilters }: Props) {
     const [showInput, setShowInput] = useState(false);
     const [newViewName, setNewViewName] = useState("");
 
@@ -73,7 +81,7 @@ export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, column
                     onToggleColumn={setHiddenColumns}
                 />
 
-                <FilterPanel tableId={tableId} viewId={viewId}/>
+                <FilterPanel tableId={tableId} viewId={viewId} filters={filters} setFilters={setFilters}/>
 
                 <SortPanel tableId={tableId} viewId={viewId}/>
             </div>

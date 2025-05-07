@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 type Props = {
   tableId: number;
   viewId: number;
+  filters: FilterCondition[];
+  setFilters: React.Dispatch<React.SetStateAction<FilterCondition[]>>;
 };
 
 type FilterCondition = {
@@ -16,7 +18,7 @@ type FilterCondition = {
   value: string;
 };
 
-export default function FilterPanel({ tableId, viewId }: Props) {
+export default function FilterPanel({ tableId, viewId, filters, setFilters }: Props) {
     const { data: columns = [], isLoading: columnsLoading } = api.column.getAllColNameId.useQuery({ tableId: Number(tableId) });
 
     const { data: fetchedFilters = [], isLoading: filtersLoading } = api.view.getFilters.useQuery(
@@ -25,28 +27,28 @@ export default function FilterPanel({ tableId, viewId }: Props) {
 
     const utils = api.useUtils();
   
-    const [filters, setFilters] = useState<FilterCondition[]>([]);
+    // const [filters, setFilters] = useState<FilterCondition[]>([]);
   
     useEffect(() => {
       setFilters(fetchedFilters);
     }, [fetchedFilters]);
 
     const textOperators = [
-    { value: "IS_NOT_EMPTY", label: "is not empty" },
-    { value: "IS_EMPTY", label: "is empty" },
-    { value: "CONTAINS", label: "contains" },
-    // { value: "NOT_CONTAINS", label: "not contains" },
-    { value: "EQUALS", label: "equals" },
+        { value: "IS_NOT_EMPTY", label: "is not empty" },
+        { value: "IS_EMPTY", label: "is empty" },
+        { value: "CONTAINS", label: "contains" },
+        // { value: "NOT_CONTAINS", label: "not contains" },
+        { value: "EQUALS", label: "equals" },
     ];
 
     const numberOperators = [
-    { value: "GREATER_THAN", label: "greater than" },
-    { value: "LESS_THAN", label: "less than" },
+        { value: "GREATER_THAN", label: "greater than" },
+        { value: "LESS_THAN", label: "less than" },
     ];
 
     const getOperatorsForType = (colType: string | undefined) => {
     if (colType === "NUMBER") return numberOperators;
-    return textOperators;
+        return textOperators;
     };
 
     const updateViewFilters = api.view.updateViewFilters.useMutation({
@@ -57,15 +59,17 @@ export default function FilterPanel({ tableId, viewId }: Props) {
 
     const deleteFilter = api.view.deleteFilter.useMutation({
         onSuccess: () => {
-          void utils.table.getTableData.invalidate();
-          void utils.view.getFilters.invalidate();
+            void utils.table.getTableData.invalidate();
+            void utils.view.getFilters.invalidate();
         }
     });
+
+    const bgClass = (filters.length > 0) ? "bg-green-200" : "bg-white"
 
     return (
     <UtilPanel
         trigger={
-        <div className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-white hover:bg-gray-200 transition text-gray-700">
+        <div className={`flex items-center gap-1 px-3 py-1.5 rounded-md ${(filters.length > 0) ? "bg-green-200" : "bg-white"} hover:bg-gray-200 transition text-gray-700`}>
             <Filter className="w-4 h-4" />
                 Filter
             <ChevronDown className="w-4 h-4" />
@@ -144,11 +148,11 @@ export default function FilterPanel({ tableId, viewId }: Props) {
                           
                         // disabled={!filter.columnId}
                     >
-                    {getOperatorsForType(selectedColumn?.type).map((op) => (
-                        <option key={op.value} value={op.value}>
-                        {op.label}
-                        </option>
-                    ))}
+                        {getOperatorsForType(selectedColumn?.type).map((op) => (
+                            <option key={op.value} value={op.value}>
+                            {op.label}
+                            </option>
+                        ))}
                     </select>
 
                     {/* Input */}

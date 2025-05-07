@@ -13,6 +13,11 @@
   padding: 0;
 }
 
+/* .editable-cell mark {
+  @apply bg-amber-200 px-0.5 rounded;
+} */
+
+
 .account-menu .menu-item {
   @apply w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100;
 }

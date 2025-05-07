@@ -10,9 +10,11 @@ type Props = {
   tableId: number;
   isAddColumn?: boolean;
   viewId: number;
+  isFiltered: boolean;
+  isSorted: boolean;
 };
 
-export default function EditableColumnHeader({ columnId, name, tableId, isAddColumn, viewId }: Props) {
+export default function EditableColumnHeader({ columnId, name, tableId, isAddColumn, viewId, isFiltered, isSorted }: Props) {
   const [editing, setEditing] = useState(isAddColumn ?? false);
   const [input, setInput] = useState(() => (isAddColumn ? "" : name ?? ""));
   const [type, setType] = useState<"TEXT" | "NUMBER">("TEXT");
@@ -94,10 +96,17 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
 
   // console.log("input" + input)
   // console.log(name)
+
+  let bgClass = "bg-gray-100";
+  if (isFiltered) {
+        bgClass = "bg-[#eaf7ef]"
+  } else if (isSorted) {
+        bgClass = "bg-[#f7ebeb]"
+  }
   
   return (
     <div
-      className="w-[200px] px-3 py-2 border-r-gray-200 border-b border-gray-300 border-1 bg-gray-100 text-sm font-medium text-gray-700"
+      className={`w-[200px] px-3 py-2 border-r-gray-200 border-b border-gray-300 border-1 ${bgClass} text-sm font-medium text-gray-700`}
       onClick={() => setEditing(true)}
     >
       {editing ? (

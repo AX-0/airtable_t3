@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { api } from "~/trpc/react";
 import { EditableCell } from "./EditableCell";
@@ -13,6 +13,12 @@ interface Props {
   tableId: number;
   viewId: number;
 }
+
+type FilterCondition = {
+  columnId: number | null;
+  operator: string;
+  value: string;
+};
 
 export function VirtualTable({ baseId, tableId, viewId }: Props) {
   const parentRef = useRef<HTMLDivElement>(null);
@@ -120,7 +126,7 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
             col: Number(nextColObj.id),
         });
     },
-    [columns, rows],          // <-- deps that really matter
+    [columns, rows],
   );
   
   const searchTerm = searchTermData ?? "";
@@ -128,6 +134,8 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
   const {data: views = []} = api.view.getAllView.useQuery({tableId: Number(tableId)});
+
+  const [filters, setFilters] = useState<FilterCondition[]>([]);
   
   if (isLoading) return <div className="p-4 text-gray-600">Loading table...</div>;
   
@@ -143,7 +151,9 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
             columns={columns}
             setHiddenColumns={toggleHiddenColumn}
             searchTerm={searchTerm}
-            toggleSidebar={toggleSidebar}
+            toggleSidebar={toggleSidebar} 
+            filters={filters} 
+            setFilters={setFilters}        
         />
 
 
@@ -175,18 +185,26 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
                     <div className="w-[100px] px-3 py-2 border-r bg-white text-center">#</div>
                     
                     {columns
-                    .filter(col => !hiddenColumns.includes(col.id))
-                    .map((col) => (
-                        <EditableColumnHeader
-                        key={col.id}
-                        columnId={col.id}
-                        name={col.name}
-                        tableId={tableId}
-                        viewId={viewId}
-                        />
-                    ))}
+                        .filter(col => !hiddenColumns.includes(col.id))
+                        .map((col) => {
 
-                    <EditableColumnHeader tableId={tableId} viewId={viewId} isAddColumn />
+                            const isFiltered = filters.some(f => f.columnId === col.id);
+
+                            return (
+                                <EditableColumnHeader
+                                    key={col.id}
+                                    columnId={col.id}
+                                    name={col.name}
+                                    tableId={tableId}
+                                    viewId={viewId}
+                                    isFiltered={isFiltered}
+                                    isSorted={false}
+                                />
+                            )
+                        })
+                    }
+
+                    <EditableColumnHeader tableId={tableId} viewId={viewId} isAddColumn isFiltered={false} isSorted={false} />
 
                 </div>
 
@@ -212,18 +230,22 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
                         const cellKey = `${row.id}_${col.id}`;
                         const value = cellMap.get(cellKey) ?? "";
 
+                        const isFiltered = filters.some(f => f.columnId === col.id);
+
                         return (
-                        <EditableCell
-                            key={`${row.id}_${col.id}`} 
-                            rowId={row.id}
-                            columnId={col.id}
-                            value={value}
-                            tableId={tableId}
-                            isFocused={focusedCell?.row === row.id && focusedCell?.col === col.id}
-                            viewId={viewId}
-                            searchTerm={searchTerm}
-                            onTab={handleTab}
-                        />
+                            <EditableCell
+                                key={`${row.id}_${col.id}`} 
+                                rowId={row.id}
+                                columnId={col.id}
+                                value={value}
+                                tableId={tableId}
+                                isFocused={focusedCell?.row === row.id && focusedCell?.col === col.id}
+                                viewId={viewId}
+                                searchTerm={searchTerm}
+                                onTab={handleTab}
+                                isFiltered={isFiltered}
+                                isSorted={false}
+                            />
                         );
                     })}
 
