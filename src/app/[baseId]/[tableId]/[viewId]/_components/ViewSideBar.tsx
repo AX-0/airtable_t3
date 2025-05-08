@@ -16,6 +16,7 @@ export default function ViewSidebarPanel({
     views = [],
     selectedViewId,
     baseId,
+    tableId
 }: {
     isOpen: boolean;
     onClose: () => void;
@@ -29,7 +30,8 @@ export default function ViewSidebarPanel({
         searchTerm: string | null;
     }[];
     selectedViewId: number;
-    baseId: number
+    baseId: number;
+    tableId: number;
 }) {
     const utils = api.useUtils();
     const router = useRouter();
@@ -87,6 +89,12 @@ export default function ViewSidebarPanel({
                                         ? "bg-blue-100 text-blue-800"
                                         : "hover:bg-gray-100"}
                                 `}
+                                onClick={(e) => {
+                                    // selectedViewId = view.id;
+                                    // if (view.id != selectedViewId) {
+                                        router.push(`/${baseId}/${tableId}/${view.id}`);
+                                    // }
+                                }}
                             >
                                 <div className="flex items-center gap-2 text-left w-full">
                                     <Table2 className="w-4 h-4 text-blue-500" />
@@ -98,10 +106,10 @@ export default function ViewSidebarPanel({
                                     <button
                                         className="cursor-pointer"
                                         onClick={(e) => {
-                                        e.stopPropagation();
-                                        setTargetViewId(view.id);
-                                        setTargetViewName(view.name ?? `View ${view.id}`);
-                                        setShowDeleteModal(true);
+                                            e.stopPropagation();
+                                            setTargetViewId(view.id);
+                                            setTargetViewName(view.name ?? `View ${view.id}`);
+                                            setShowDeleteModal(true);
                                         }}
                                     >
                                         <Trash2 className="w-4 h-4 text-red-600" />
