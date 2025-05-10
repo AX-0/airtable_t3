@@ -40,26 +40,26 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
     const [hiddenColumns, setHiddenColumns] = useState<number[]>(initialHiddenColumns);
 
     const toggleHiddenColumn = (columnId: number) => {
-    setHiddenColumns((prev) =>
-        prev.includes(columnId)
-        ? prev.filter((id) => id !== columnId)
-        : [...prev, columnId]
-    );
+        setHiddenColumns((prev) =>
+            prev.includes(columnId)
+            ? prev.filter((id) => id !== columnId)
+            : [...prev, columnId]
+        );
     };
 
 
     const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
     } = api.table.getTableData.useInfiniteQuery(
-    { tableId: Number(tableId), limit: 1000, viewId: Number(viewId) },
-    {
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
-        refetchOnWindowFocus: false,
-    }
+        { tableId: Number(tableId), limit: 1000, viewId: Number(viewId) },
+        {
+            getNextPageParam: (lastPage) => lastPage.nextCursor,
+            refetchOnWindowFocus: false,
+        }
     );
 
     const rows = data?.pages.flatMap((page) => page.rows) ?? [];
@@ -67,71 +67,73 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
     const cells = data?.pages.flatMap((page) => page.cells) ?? [];
 
     const cellMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const cell of cells) {
-        map.set(`${cell.rowId}_${cell.columnId}`, cell.value);
-    }
-    return map;
+        const map = new Map<string, string>();
+        for (const cell of cells) {
+            map.set(`${cell.rowId}_${cell.columnId}`, cell.value);
+        }
+        return map;
     }, [cells]);
 
     const rowVirtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 40,
-    overscan: 5,
-    getItemKey: index => rows[index]!.id, 
+        count: rows.length,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => 40,
+        overscan: 5,
+        getItemKey: index => rows[index]!.id, 
     });
 
     const virtualItems = rowVirtualizer.getVirtualItems();
 
     useEffect(() => {
-    const [lastItem] = virtualItems.slice(-1);
-    if (!lastItem) return;
-    if (lastItem.index >= rows.length * 0.7 && hasNextPage && !isFetchingNextPage) {
-        void fetchNextPage();
-    }
+        const [lastItem] = virtualItems.slice(-1);
+        if (!lastItem) return;
+        if (lastItem.index >= rows.length * 0.7 && hasNextPage && !isFetchingNextPage) {
+            void fetchNextPage();
+        }
     }, [virtualItems, rows.length, hasNextPage, isFetchingNextPage]);
 
     const {
-    data: searchTermData,
-    isFetching: searchFetching,
+        data: searchTermData,
+        isFetching: searchFetching,
     } = api.view.getSearchTerm.useQuery(
-    { viewId: Number(viewId) },
-    { enabled: !!data }
+        { viewId: Number(viewId) },
+        { enabled: !!data }
     );
 
     const visibleCols = useMemo(
-    () => columns.filter(c => !hiddenColumns.includes(c.id)),
-    [columns, hiddenColumns],
+        () => columns.filter(c => !hiddenColumns.includes(c.id)),
+        [columns, hiddenColumns],
     )
 
     const handleTab = useCallback(
-    (direction: 'next' | 'prev', rowId: number, colId: number) => {
-        const rowIndex = rows.findIndex((r) => r.id === rowId);
-        const colIndex = visibleCols.findIndex((c) => c.id === colId);
+        (direction: 'next' | 'prev', rowId: number, colId: number) => {
+            const rowIndex = rows.findIndex((r) => r.id === rowId);
+            const colIndex = visibleCols.findIndex((c) => c.id === colId);
 
-        let nextRow = rowIndex;
-        let nextCol = direction === "next" ? colIndex + 1 : colIndex - 1;
+            let nextRow = rowIndex;
+            let nextCol = direction === "next" ? colIndex + 1 : colIndex - 1;
 
-        if (nextCol >= visibleCols.length) {
-            nextCol = 0;
-            nextRow += 1;
-        } else if (nextCol < 0) {
-            nextRow -= 1;
-            nextCol = visibleCols.length - 1;
-        }
+            if (nextCol >= visibleCols.length) {
+                nextCol = 0;
+                nextRow += 1;
+            } else if (nextCol < 0) {
+                nextRow -= 1;
+                nextCol = visibleCols.length - 1;
+            }
 
-        if (nextRow < 0 || nextRow >= rows.length) return;
-        const nextRowObj = rows[nextRow];
-        const nextColObj = visibleCols[nextCol];
-        if (!nextRowObj || !nextColObj) return;
-        
-        setFocusedCell({
-            row: Number(nextRowObj.id),
-            col: Number(nextColObj.id),
-        });
-    },
-    [columns, rows],
+            if (nextRow < 0 || nextRow >= rows.length) return;
+
+            const nextRowObj = rows[nextRow];
+            const nextColObj = visibleCols[nextCol];
+
+            if (!nextRowObj || !nextColObj) return;
+            
+            setFocusedCell({
+                row: Number(nextRowObj.id),
+                col: Number(nextColObj.id),
+            });
+        },
+        [columns, rows],
     );
 
     const searchTerm = searchTermData ?? "";
@@ -183,89 +185,89 @@ export function VirtualTable({ baseId, tableId, viewId }: Props) {
                 )}
 
                 <div ref={parentRef} className="flex-1 overflow-auto relative">
-                <div
-                    style={{
-                        height: rowVirtualizer.getTotalSize(),
-                        position: 'relative',
-                    }}
-                >
-                    {/* Header Row */}
-                    <div className="sticky top-0 z-10 flex bg-gray-100 border-b border-gray-300 text-sm text-gray-700 font-medium">
-                        <div className="w-[100px] px-3 py-2 border-r bg-white text-center">#</div>
-                        
-                        {columns
-                            .filter(col => !hiddenColumns.includes(col.id))
-                            .map((col) => {
+                    <div
+                        style={{
+                            height: rowVirtualizer.getTotalSize(),
+                            position: 'relative',
+                        }}
+                    >
+                        {/* Header Row */}
+                        <div className="sticky top-0 z-10 flex bg-gray-100 border-b border-gray-300 text-sm text-gray-700 font-medium">
+                            <div className="w-[100px] px-3 py-2 border-r bg-white text-center">#</div>
+                            
+                            {columns
+                                .filter(col => !hiddenColumns.includes(col.id))
+                                .map((col) => {
 
-                                const isFiltered = filters.some(f => f.columnId === col.id);
-                                const isSorted = sorts.some(f => f.columnId === col.id);
+                                    const isFiltered = filters.some(f => f.columnId === col.id);
+                                    const isSorted = sorts.some(f => f.columnId === col.id);
 
-                                return (
-                                    <EditableColumnHeader
-                                        key={col.id}
-                                        columnId={col.id}
-                                        name={col.name}
-                                        tableId={tableId}
-                                        viewId={viewId}
-                                        isFiltered={isFiltered}
-                                        isSorted={isSorted}
-                                    />
-                                )
-                            })
-                        }
+                                    return (
+                                        <EditableColumnHeader
+                                            key={col.id}
+                                            columnId={col.id}
+                                            name={col.name}
+                                            tableId={tableId}
+                                            viewId={viewId}
+                                            isFiltered={isFiltered}
+                                            isSorted={isSorted}
+                                        />
+                                    )
+                                })
+                            }
 
-                        <EditableColumnHeader tableId={tableId} viewId={viewId} isAddColumn isFiltered={false} isSorted={false} />
+                            <EditableColumnHeader tableId={tableId} viewId={viewId} isAddColumn isFiltered={false} isSorted={false} />
 
-                    </div>
-
-                    {/* Data Rows */}
-                    {virtualItems.map((virtualRow) => {
-                        const row = rows[virtualRow.index];
-                        if (!row) return null;
-
-                        return (
-                        <div
-                            key={row.id}
-                            className="flex absolute left-0 w-full border-t border-gray-200"
-                            style={{ transform: `translateY(${virtualRow.start}px)` }}
-                        >
-
-                        <div className="w-[100px] px-3 py-2 border-r bg-gray-50">
-                            {virtualRow.index + 1}
                         </div>
 
-                        {visibleCols
-                            .filter(col => !hiddenColumns.includes(col.id))
-                            .map((col) => {
-                            const cellKey = `${row.id}_${col.id}`;
-                            const value = cellMap.get(cellKey) ?? "";
-
-                            const isFiltered = filters.some(f => f.columnId === col.id);
-                            const isSorted = sorts.some(f => f.columnId === col.id);
+                        {/* Data Rows */}
+                        {virtualItems.map((virtualRow) => {
+                            const row = rows[virtualRow.index];
+                            if (!row) return null;
 
                             return (
-                                <EditableCell
-                                    key={`${row.id}_${col.id}`} 
-                                    rowId={row.id}
-                                    columnId={col.id}
-                                    value={value}
-                                    tableId={tableId}
-                                    isFocused={focusedCell?.row === row.id && focusedCell?.col === col.id}
-                                    viewId={viewId}
-                                    searchTerm={searchTerm}
-                                    onTab={handleTab}
-                                    isFiltered={isFiltered}
-                                    isSorted={isSorted}
-                                />
+                                <div
+                                    key={row.id}
+                                    className="flex absolute left-0 w-full border-t border-gray-200"
+                                    style={{ transform: `translateY(${virtualRow.start}px)` }}
+                                >
+
+                                <div className="w-[100px] px-3 py-2 border-r bg-gray-50">
+                                    {virtualRow.index + 1}
+                                </div>
+
+                                {visibleCols
+                                    .filter(col => !hiddenColumns.includes(col.id))
+                                    .map((col) => {
+                                    const cellKey = `${row.id}_${col.id}`;
+                                    const value = cellMap.get(cellKey) ?? "";
+
+                                    const isFiltered = filters.some(f => f.columnId === col.id);
+                                    const isSorted = sorts.some(f => f.columnId === col.id);
+
+                                    return (
+                                        <EditableCell
+                                            key={`${row.id}_${col.id}`} 
+                                            rowId={row.id}
+                                            columnId={col.id}
+                                            value={value}
+                                            tableId={tableId}
+                                            isFocused={focusedCell?.row === row.id && focusedCell?.col === col.id}
+                                            viewId={viewId}
+                                            searchTerm={searchTerm}
+                                            onTab={handleTab}
+                                            isFiltered={isFiltered}
+                                            isSorted={isSorted}
+                                        />
+                                    );
+                                })}
+
+                                <div className="w-[200px] px-3 py-2 border-r" />
+
+                                </div>
                             );
                         })}
-
-                        <div className="w-[200px] px-3 py-2 border-r" />
-
-                        </div>
-                        );
-                    })}
-                </div>
+                    </div>
                 </div>
             </div>
         </div>

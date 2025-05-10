@@ -80,90 +80,90 @@ export default function SortPanel({ tableId, viewId, sorts, setSorts }: Props) {
             }
         >
             <div className="w-[300px] text-sm text-gray-700 space-y-4">
-            <div className="font-semibold">Sort records by</div>
+                <div className="font-semibold">Sort records by</div>
 
-            {sorts.map((sort, index) => {
-                const selectedColumn = columns.find(c => c.id === sort.columnId);
+                {sorts.map((sort, index) => {
+                    const selectedColumn = columns.find(c => c.id === sort.columnId);
 
-                return (
-                <div key={index} className="flex items-center gap-2">
-                    then by
+                    return (
+                    <div key={index} className="flex items-center gap-2">
+                        then by
 
-                    {/* column select */}
-                    <select
-                    className="border rounded px-2 py-1"
-                    value={sort.columnId ?? ""}
-                    onChange={e => {
-                        const next = [...sorts];
-                        if (next[index]) next[index].columnId = Number(e.target.value);
-                        setSorts(next);
-                        persist(next);
-                    }}
-                    >
-                    <option value="" disabled>
-                        Select column
-                    </option>
-                    {columns.map(col => (
-                        <option key={col.id} value={col.id}>
-                        {col.name}
+                        {/* column select */}
+                        <select
+                        className="border rounded px-2 py-1"
+                        value={sort.columnId ?? ""}
+                        onChange={e => {
+                            const next = [...sorts];
+                            if (next[index]) next[index].columnId = Number(e.target.value);
+                            setSorts(next);
+                            persist(next);
+                        }}
+                        >
+                        <option value="" disabled>
+                            Select column
                         </option>
-                    ))}
-                    </select>
+                        {columns.map(col => (
+                            <option key={col.id} value={col.id}>
+                            {col.name}
+                            </option>
+                        ))}
+                        </select>
 
-                    {/* direction select */}
-                    <select
-                    className="border rounded px-2 py-1"
-                    value={sort.direction}
-                    onChange={e => {
-                        const next = [...sorts];
-                        if (next[index]) next[index].direction = e.target.value as
-                        | "asc"
-                        | "desc";
-                        setSorts(next);
-                        persist(next);
-                    }}
-                    >
-                    {dirOptions(selectedColumn?.type).map(opt => (
-                        <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                        </option>
-                    ))}
-                    </select>
+                        {/* direction select */}
+                        <select
+                        className="border rounded px-2 py-1"
+                        value={sort.direction}
+                        onChange={e => {
+                            const next = [...sorts];
+                            if (next[index]) next[index].direction = e.target.value as
+                            | "asc"
+                            | "desc";
+                            setSorts(next);
+                            persist(next);
+                        }}
+                        >
+                        {dirOptions(selectedColumn?.type).map(opt => (
+                            <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                            </option>
+                        ))}
+                        </select>
 
-                    {/* delete */}
-                    <button
-                    className="text-red-600"
-                    onClick={() => {
-                        const target = sorts[index]!;
-                        if (target.columnId == null) return;
-                        deleteSort.mutate({
-                        viewId: Number(viewId),
-                        sort: {
-                            columnId: target.columnId,
-                            direction: target.direction,
-                        },
-                        });
-                        setSorts(prev => prev.filter((_, i) => i !== index));
-                    }}
-                    >
-                    <Trash className="w-4 h-4" />
-                    </button>
-                </div>
-                );
-            })}
+                        {/* delete */}
+                        <button
+                        className="text-red-600"
+                        onClick={() => {
+                            const target = sorts[index]!;
+                            if (target.columnId == null) return;
+                            deleteSort.mutate({
+                            viewId: Number(viewId),
+                            sort: {
+                                columnId: target.columnId,
+                                direction: target.direction,
+                            },
+                            });
+                            setSorts(prev => prev.filter((_, i) => i !== index));
+                        }}
+                        >
+                        <Trash className="w-4 h-4" />
+                        </button>
+                    </div>
+                    );
+                })}
 
-            {/* add sort level */}
-            <button
-                className="text-blue-600 text-sm cursor-pointer"
-                onClick={() =>
-                setSorts(prev => [
-                    ...prev,
-                    { columnId: null, direction: "asc" },
-                ])
-                }
-            >
-                + Add sort
-            </button>
+                {/* add sort level */}
+                <button
+                    className="text-blue-600 text-sm cursor-pointer"
+                    onClick={() =>
+                    setSorts(prev => [
+                        ...prev,
+                        { columnId: null, direction: "asc" },
+                    ])
+                    }
+                >
+                    + Add sort
+                </button>
             </div>
         </UtilPanel>
     );

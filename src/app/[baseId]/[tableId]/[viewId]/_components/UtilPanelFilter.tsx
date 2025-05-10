@@ -47,7 +47,7 @@ export default function FilterPanel({ tableId, viewId, filters, setFilters }: Pr
     ];
 
     const getOperatorsForType = (colType: string | undefined) => {
-    if (colType === "NUMBER") return numberOperators;
+        if (colType === "NUMBER") return numberOperators;
         return textOperators;
     };
 
@@ -72,11 +72,11 @@ export default function FilterPanel({ tableId, viewId, filters, setFilters }: Pr
     return (
     <UtilPanel
         trigger={
-        <div className={`flex items-center gap-1 px-3 py-1.5 rounded-md ${bgClass} transition text-gray-700`}>
-            <Filter className="w-4 h-4" />
-                Filter
-            <ChevronDown className="w-4 h-4" />
-        </div>
+            <div className={`flex items-center gap-1 px-3 py-1.5 rounded-md ${bgClass} transition text-gray-700`}>
+                <Filter className="w-4 h-4" />
+                    Filter
+                <ChevronDown className="w-4 h-4" />
+            </div>
         }
     >
         <div className="w-[500px] text-sm text-gray-700 space-y-4">
@@ -114,10 +114,11 @@ export default function FilterPanel({ tableId, viewId, filters, setFilters }: Pr
                             }
                         }}
                     >
+
                     <option value="" disabled>Select column</option>
                         {columns.map((col) => (
                             <option key={col.id} value={col.id}>
-                            {col.name}
+                                {col.name}
                             </option>
                         ))}
                     </select>
@@ -142,9 +143,9 @@ export default function FilterPanel({ tableId, viewId, filters, setFilters }: Pr
                             updateViewFilters.mutate({
                                 viewId: Number(viewId),
                                 filters: newFilters.filter(f => f.columnId !== null) as {
-                                columnId: number;
-                                operator: string;
-                                value: string;
+                                    columnId: number;
+                                    operator: string;
+                                    value: string;
                                 }[],
                             });
                         }}
@@ -153,7 +154,7 @@ export default function FilterPanel({ tableId, viewId, filters, setFilters }: Pr
                     >
                         {getOperatorsForType(selectedColumn?.type).map((op) => (
                             <option key={op.value} value={op.value}>
-                            {op.label}
+                                {op.label}
                             </option>
                         ))}
                     </select>
@@ -189,7 +190,7 @@ export default function FilterPanel({ tableId, viewId, filters, setFilters }: Pr
                         }
                     />
 
-                    {/* Trash button */}
+                    {/* Delete */}
                     <button
                         className="text-red-600 cursor-pointer"
                         onClick={() => {

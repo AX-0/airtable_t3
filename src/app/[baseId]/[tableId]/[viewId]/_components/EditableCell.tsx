@@ -37,53 +37,54 @@ export function EditableCell({
     const { data: colType } = api.column.getType.useQuery({ columnId: Number(columnId) })
 
     const updateCell = api.cell.update.useMutation({
-    onMutate: ({ rowId, columnId, value }) => {
-        const prevData = utils.table.getTableData.getInfiniteData({
-        tableId,
-        viewId: Number(viewId)
-        });
+        onMutate: ({ rowId, columnId, value }) => {
+            const prevData = utils.table.getTableData.getInfiniteData({
+                tableId,
+                viewId: Number(viewId)
+            });
 
-        utils.table.getTableData.setInfiniteData({
-        tableId,
-        viewId: Number(viewId)
-        }, (old) => {
-        if (!old) return old;
-        return {
-            ...old,
-            pages: old.pages.map((page) => ({
-            ...page,
-            cells: page.cells.map((cell) =>
-                cell.rowId === rowId && cell.columnId === columnId
-                ? { ...cell, value }
-                : cell
-            ),
-            })),
-        };
-        });
+            utils.table.getTableData.setInfiniteData({
+                tableId,
+                viewId: Number(viewId)
+            }, (old) => {
+                if (!old) return old;
+                
+                return {
+                    ...old,
+                    pages: old.pages.map((page) => ({
+                        ...page,
+                        cells: page.cells.map((cell) =>
+                            cell.rowId === rowId && cell.columnId === columnId
+                            ? { ...cell, value }
+                            : cell
+                        ),
+                    })),
+                };
+            });
 
-        return { prevData };
-    },
-    onError: (_err, _vars, ctx) => {
-        if (ctx?.prevData) {
-        utils.table.getTableData.setInfiniteData({
-            tableId,
-            viewId: Number(viewId)
-        }, ctx.prevData);
-        }
-    },
-    onSettled: () => {
-        void utils.table.getTableData.invalidate();
-        void utils.view.getSearchTerm.invalidate({ viewId });
-    },
+            return { prevData };
+        },
+        onError: (_err, _vars, ctx) => {
+            if (ctx?.prevData) {
+                utils.table.getTableData.setInfiniteData({
+                    tableId,
+                    viewId: Number(viewId)
+                }, ctx.prevData);
+            }
+        },
+        onSettled: () => {
+            void utils.table.getTableData.invalidate();
+            void utils.view.getSearchTerm.invalidate({ viewId });
+        },
     });
 
     useEffect(() => setInput(value), [value]);
 
     useEffect(() => {
-    if (isFocused) {
-        setEditing(true);
-        inputRef.current?.focus();
-    }
+        if (isFocused) {
+            setEditing(true);
+            inputRef.current?.focus();
+        }
     }, [isFocused]);
 
     const handleSave = () => {
