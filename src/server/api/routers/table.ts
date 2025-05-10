@@ -53,7 +53,7 @@ export const tableRouter = createTRPCRouter({
             where  : (c, { eq }) => eq(c.tableId, input.tableId),
             orderBy: (c, { asc }) => asc(c.id),
         });
-            const colTypeById = new Map<number, "NUMBER" | "TEXT">(
+        const colTypeById = new Map<number, "NUMBER" | "TEXT">(
             columnsResult.map(c => [c.id, c.type]),
         );
 
@@ -62,64 +62,64 @@ export const tableRouter = createTRPCRouter({
         if (input.cursor) whereParts.push(gt(rows.id, input.cursor));
 
         for (const f of filters) {
-        const cId = f.columnId;
-        switch (f.operator) {
-            case "EQUALS":
-                whereParts.push(sql`EXISTS (
-                    SELECT 1 FROM ${cells}
-                    WHERE ${cells.rowId} = ${rows.id}
-                    AND ${cells.columnId} = ${cId}
-                    AND ${cells.value} = ${f.value}
-                )`);
-                break;
+            const cId = f.columnId;
+            switch (f.operator) {
+                case "EQUALS":
+                    whereParts.push(sql`EXISTS (
+                        SELECT 1 FROM ${cells}
+                        WHERE ${cells.rowId} = ${rows.id}
+                        AND ${cells.columnId} = ${cId}
+                        AND ${cells.value} = ${f.value}
+                    )`);
+                    break;
 
-            case "CONTAINS":
-                whereParts.push(sql`EXISTS (
-                    SELECT 1 FROM ${cells}
-                    WHERE ${cells.rowId} = ${rows.id}
-                    AND ${cells.columnId} = ${cId}
-                    AND ${cells.value} ILIKE ${`%${f.value}%`}
-                )`);
-                break;
+                case "CONTAINS":
+                    whereParts.push(sql`EXISTS (
+                        SELECT 1 FROM ${cells}
+                        WHERE ${cells.rowId} = ${rows.id}
+                        AND ${cells.columnId} = ${cId}
+                        AND ${cells.value} ILIKE ${`%${f.value}%`}
+                    )`);
+                    break;
 
-            case "GREATER_THAN":
-                whereParts.push(sql`(
-                    SELECT NULLIF(${cells.value}, '')::numeric
-                    FROM ${cells}
-                    WHERE ${cells.rowId} = ${rows.id}
-                    AND ${cells.columnId} = ${cId}
-                    LIMIT 1
-                ) > ${Number(f.value)}`);
-                break;
+                case "GREATER_THAN":
+                    whereParts.push(sql`(
+                        SELECT NULLIF(${cells.value}, '')::numeric
+                        FROM ${cells}
+                        WHERE ${cells.rowId} = ${rows.id}
+                        AND ${cells.columnId} = ${cId}
+                        LIMIT 1
+                    ) > ${Number(f.value)}`);
+                    break;
 
-            case "LESS_THAN":
-                whereParts.push(sql`(
-                    SELECT NULLIF(${cells.value}, '')::numeric
-                    FROM ${cells}
-                    WHERE ${cells.rowId} = ${rows.id}
-                    AND ${cells.columnId} = ${cId}
-                    LIMIT 1
-                ) < ${Number(f.value)}`);
-                break;
+                case "LESS_THAN":
+                    whereParts.push(sql`(
+                        SELECT NULLIF(${cells.value}, '')::numeric
+                        FROM ${cells}
+                        WHERE ${cells.rowId} = ${rows.id}
+                        AND ${cells.columnId} = ${cId}
+                        LIMIT 1
+                    ) < ${Number(f.value)}`);
+                    break;
 
-            case "IS_EMPTY":
-                whereParts.push(sql`NOT EXISTS (
-                    SELECT 1 FROM ${cells}
-                    WHERE ${cells.rowId} = ${rows.id}
-                    AND ${cells.columnId} = ${cId}
-                    AND (${cells.value} IS NOT NULL AND ${cells.value} <> '')
-                )`);
-                break;
+                case "IS_EMPTY":
+                    whereParts.push(sql`NOT EXISTS (
+                        SELECT 1 FROM ${cells}
+                        WHERE ${cells.rowId} = ${rows.id}
+                        AND ${cells.columnId} = ${cId}
+                        AND (${cells.value} IS NOT NULL AND ${cells.value} <> '')
+                    )`);
+                    break;
 
-            case "IS_NOT_EMPTY":
-                whereParts.push(sql`EXISTS (
-                    SELECT 1 FROM ${cells}
-                    WHERE ${cells.rowId} = ${rows.id}
-                    AND ${cells.columnId} = ${cId}
-                    AND (${cells.value} IS NOT NULL AND ${cells.value} <> '')
-                )`);
-                break;
-        }
+                case "IS_NOT_EMPTY":
+                    whereParts.push(sql`EXISTS (
+                        SELECT 1 FROM ${cells}
+                        WHERE ${cells.rowId} = ${rows.id}
+                        AND ${cells.columnId} = ${cId}
+                        AND (${cells.value} IS NOT NULL AND ${cells.value} <> '')
+                    )`);
+                    break;
+            }
         }
 
         if (searchTerm) {
@@ -166,7 +166,7 @@ export const tableRouter = createTRPCRouter({
             .limit(input.limit);
 
         const nextCursor =
-        rowsResult.length === input.limit ? rowsResult.at(-1)!.id : undefined;
+            rowsResult.length === input.limit ? rowsResult.at(-1)!.id : undefined;
 
         // fetch cells
         const rowIds = rowsResult.map(r => r.id);
@@ -177,9 +177,9 @@ export const tableRouter = createTRPCRouter({
         if (rowIds.length) {
             const parts = await Promise.all(
                 chunkArray(rowIds, 1000).map(chunk =>
-                ctx.db.query.cells.findMany({
-                    where: (c, { inArray }) => inArray(c.rowId, chunk),
-                }),
+                    ctx.db.query.cells.findMany({
+                        where: (c, { inArray }) => inArray(c.rowId, chunk),
+                    }),
                 ),
             );
             cellsResult = parts.flat();
