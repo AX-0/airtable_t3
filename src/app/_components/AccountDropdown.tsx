@@ -78,7 +78,7 @@ export default function AccountDropdown() {
                 className="menu-item flex items-center gap-2 cursor-pointer"
                 onClick={() => {
                     document.cookie = "guest=; path=/; max-age=0";
-                    signOut({ callbackUrl: "/login" })
+                    void signOut({ callbackUrl: "/login" })
                 }}
             >
                 <LogOut className="w-4 h-4" /> Log out
