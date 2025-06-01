@@ -13,7 +13,7 @@ export function GuestNotice() {
         <div>
           <strong>You&apos;re browsing as a Guest.</strong>
           <p className="text-sm mt-1">
-            Guest users can view content but cannot create or modify data. You can still user the filtering/sorting/searching/hide fields features and there are 100k rows of prepopulated data at the &quot;Test&quot; base. To unlock full functionality, please sign in with Google.
+            Guest users can view content but cannot create or modify data. You can still user the filtering/sorting/searching/hide fields features and there are 100k rows of prepopulated data at the &quot;Test&quot; base. Your session is only valid for 30 minutes. To unlock full functionality, please sign in with Google.
           </p>
         </div>
         <button
