@@ -76,7 +76,10 @@ export default function AccountDropdown() {
 
             <button 
                 className="menu-item flex items-center gap-2 cursor-pointer"
-                onClick={() => signOut({ callbackUrl: "/login" })}
+                onClick={() => {
+                    document.cookie = "guest=; path=/; max-age=0";
+                    signOut({ callbackUrl: "/login" })
+                }}
             >
                 <LogOut className="w-4 h-4" /> Log out
             </button>
