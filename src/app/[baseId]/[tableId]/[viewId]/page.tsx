@@ -17,7 +17,7 @@ export default async function ViewPage({
     }>;
 }) {
     const session = await auth();
-    if (!session?.user) redirect("/sign-in");
+    if (!session?.user) redirect("/login");
 
     const { baseId, tableId, viewId } = await params;
 
