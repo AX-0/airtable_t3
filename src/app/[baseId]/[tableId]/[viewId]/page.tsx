@@ -36,7 +36,7 @@ export default async function ViewPage({
         )
         .limit(1);
 
-    if (result.length === 0) notFound();
+    if (result.length === 0) redirect("/");
 
     return (
         <>
