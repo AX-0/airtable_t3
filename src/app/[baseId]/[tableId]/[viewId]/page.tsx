@@ -1,6 +1,12 @@
 import TableView from "./TableView";
 import BaseHeader from "./_components/BaseHeader";
 
+import { auth } from "~/server/auth";
+import { db } from "~/server/db";
+import { views, tables, bases } from "~/server/db/schema";
+import { eq, and } from "drizzle-orm";
+import { redirect, notFound } from "next/navigation";
+
 export default async function ViewPage({
     params,
 }: {
@@ -10,7 +16,27 @@ export default async function ViewPage({
         viewId: number;
     }>;
 }) {
+    const session = await auth();
+    if (!session?.user) redirect("/sign-in");
+
     const { baseId, tableId, viewId } = await params;
+
+    const result = await db
+        .select({ view: views })
+        .from(views)
+        .innerJoin(tables, eq(views.tableId, tables.id))
+        .innerJoin(bases, eq(tables.baseId, bases.id))
+        .where(
+        and(
+            eq(views.id, viewId),
+            eq(tables.id, tableId),
+            eq(bases.id, baseId),
+            eq(bases.ownerId, session.user.id),
+        )
+        )
+        .limit(1);
+
+    if (result.length === 0) notFound();
 
     return (
         <>
