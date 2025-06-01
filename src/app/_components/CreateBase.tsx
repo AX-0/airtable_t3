@@ -12,6 +12,8 @@ export function CreateBase({ collapsed }: { collapsed: boolean }) {
     const utils = api.useUtils();
     const router = useRouter();
 
+    const isGuest = typeof window !== "undefined" && document.cookie.includes("guest=guest_user");
+
     const createBase = api.base.createBaseDefault.useMutation({
         onSuccess: async () => {
             await utils.base.getBases.invalidate();
@@ -61,7 +63,13 @@ export function CreateBase({ collapsed }: { collapsed: boolean }) {
                                 </button>
 
                                 <button
-                                    onClick={() => createBase.mutate({ name })}
+                                    onClick={() => {
+                                        if (isGuest) {
+                                            return;
+                                        }
+
+                                        createBase.mutate({ name })
+                                    }}
                                     disabled={!name || createBase.isPending}
                                     className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                                 >

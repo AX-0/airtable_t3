@@ -18,6 +18,11 @@ export default function LoginPage() {
         return <div className="flex items-center justify-center h-screen">Loading...</div>;
     }
 
+    const handleGuestLogin = () => {
+        document.cookie = `guest=guest_user; path=/; max-age=${60 * 30}`; // seconds * minutes, 30 minutes
+        router.push("/");
+    };
+
     return (
         <main className="flex min-h-screen flex-col items-center justify-center bg-[#f9fafb]">
             <div className="flex flex-col items-center gap-8 p-8 rounded-lg bg-white shadow-md">
@@ -29,6 +34,13 @@ export default function LoginPage() {
                     className="px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
                 >
                     Sign in with Google
+                </button>
+
+                <button
+                    onClick={handleGuestLogin}
+                    className="px-6 py-3 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
+                >
+                    Continue as Guest (Cannot Edit/Create)
                 </button>
             </div>
         </main>

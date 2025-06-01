@@ -21,7 +21,11 @@ export default function HomeNavbar({ setCollapsed }: Props) {
 
     const router = useRouter();
 
-    if (!session && status !== "loading") return null;
+    if (!session && status !== "loading") {
+        // If it's a guest (cookie-based), allow render
+        const isGuest = typeof document !== "undefined" && document.cookie.includes("guest=guest_user");
+        if (!isGuest) return null;
+    }
 
     return (
         <nav className={`sticky top-0 z-50 flex items-center justify-between w-full h-13 px-4 shadow-sm bg-white`}>

@@ -19,6 +19,8 @@ export default function TableTabs({ baseId, selectedTableId, color }: TableTabsP
     const router = useRouter();
     const utils = api.useUtils();
 
+    const isGuest = typeof window !== "undefined" && document.cookie.includes("guest=guest_user");
+
     const { data: tables = [], isLoading } = api.base.getAllTableIdName.useQuery({
         baseId: Number(baseId),
     });
@@ -73,16 +75,22 @@ export default function TableTabs({ baseId, selectedTableId, color }: TableTabsP
                             const isSelected = Number(table.id) === Number(selectedTableId);
                             return (
                                 <div key={table.id} className="flex items-center">
-                                    {(isSelected) ? (
-                                        <TableDropdown baseId={baseId} table={table} onlyTable={tables.length <= 1}/>
+                                    {isSelected ? (
+                                        isGuest ? (
+                                            <div className="flex items-center gap-1 px-4 py-1.5 text-xs font-medium transition cursor-pointer rounded-t-sm h-full bg-white text-gray-800">
+                                                {table.name ?? `Table ${table.id}`}
+                                            </div>
+                                        ) : (
+                                            <TableDropdown baseId={baseId} table={table} onlyTable={tables.length <= 1} />
+                                        )
                                     ) : (
-                                        <button
-                                            onClick={() => getFirstView.mutate({ tableId: table.id })}
-                                            className="flex items-center gap-1 px-4 py-1.5 text-xs font-medium transition cursor-pointer rounded-t-sm h-full hover:text-white hover:bg-black/10"
-                                        >
-                                            {table.name ?? `Table ${table.id}`}
-                                        </button>
-                                    )}                            
+                                    <button
+                                        onClick={() => getFirstView.mutate({ tableId: table.id })}
+                                        className="flex items-center gap-1 px-4 py-1.5 text-xs font-medium transition cursor-pointer rounded-t-sm h-full hover:text-white hover:bg-black/10"
+                                    >
+                                        {table.name ?? `Table ${table.id}`}
+                                    </button>
+                                    )}                          
                                 
                                     {(!isSelected) ? <div className="w-px h-3 bg-white/30" /> : ""}
                                 </div>
@@ -91,7 +99,13 @@ export default function TableTabs({ baseId, selectedTableId, color }: TableTabsP
                     )}
 
                     <button
-                        onClick={() => setOpen(true)}
+                        onClick={() => {
+                            if (isGuest) {
+                                return;
+                            }
+
+                            setOpen(true)
+                        }}
                         className="px-3 py-1.5 text-sm rounded-full transition cursor-pointer"
                     >
                         <Plus className="w-5 h-5" />
@@ -101,7 +115,13 @@ export default function TableTabs({ baseId, selectedTableId, color }: TableTabsP
                 <div className="flex items-center gap-2 ml-auto">
                     <button
                         // onClick={() => add1kRows.mutate({tableId: Number(selectedTableId)})}
-                        onClick={() => add100kRows.mutate({tableId: Number(selectedTableId)})}
+                        onClick={() => {
+                            if (isGuest) {
+                                return;
+                            }
+
+                            add100kRows.mutate({tableId: Number(selectedTableId)})
+                        }}
                         className="px-3 py-1.5 text-sm rounded-full transition cursor-pointer"
                         title="Add 100k Rows"
                     >

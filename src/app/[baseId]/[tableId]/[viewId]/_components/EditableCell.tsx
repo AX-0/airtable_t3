@@ -4,6 +4,8 @@ import React from "react";
 import { useEffect, useRef, useState } from "react";
 import { api } from "~/trpc/react";
 
+import { useSession } from "next-auth/react";
+
 type Props = {
     rowId: number;
     columnId: number;
@@ -33,6 +35,9 @@ export function EditableCell({
     const [input, setInput] = useState(value);
     const inputRef = useRef<HTMLInputElement>(null);
     const utils = api.useUtils();
+
+    const { data: session, status } = useSession();
+    const isGuest = typeof window !== "undefined" && document.cookie.includes("guest=guest_user");
 
     const { data: colType } = api.column.getType.useQuery({ columnId: Number(columnId) })
 
@@ -88,6 +93,11 @@ export function EditableCell({
     }, [isFocused]);
 
     const handleSave = () => {
+        if (isGuest) {
+            setEditing(false);
+            setInput(value);
+            return;
+        }
         setEditing(false);
         console.log(input + " : " + value);
 

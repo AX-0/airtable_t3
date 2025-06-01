@@ -43,6 +43,8 @@ export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, column
     const utils = api.useUtils();
     const router = useRouter();
 
+    const isGuest = typeof window !== "undefined" && document.cookie.includes("guest=guest_user");
+
     const createView = api.view.createView.useMutation({
         onSuccess: async (newView) => {
           setShowInput(false);
@@ -98,7 +100,12 @@ export default function UtilBar({ baseId, tableId, viewId, hiddenColumns, column
                 <CellSearch viewId={Number(viewId)} searchTerm={searchTerm}/>
 
                 <button
-                    onClick={() => createRow.mutate({ tableId: Number(tableId) })}
+                    onClick={() => {
+                        if (isGuest) {
+                            return;
+                        }
+                        createRow.mutate({ tableId: Number(tableId) })
+                    }}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition"
                     >
                     <Plus className="w-4 h-4" />

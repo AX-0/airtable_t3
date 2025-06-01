@@ -62,6 +62,8 @@ export default function ViewSidebarPanel({
         },
     });
 
+    const isGuest = typeof window !== "undefined" && document.cookie.includes("guest=guest_user");
+
     if (!isOpen) return null;
 
     console.log(selectedViewId);
@@ -174,6 +176,10 @@ export default function ViewSidebarPanel({
                                 disabled={!newViewName.trim()}
                                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm disabled:opacity-50"
                                 onClick={() => {
+                                    if (isGuest) {
+                                        return;
+                                    }
+                                    
                                     createView.mutate({ tableId: views[0]?.tableId ?? 0, name: newViewName });
                                     setShowModal(false);
                                     setNewViewName("");

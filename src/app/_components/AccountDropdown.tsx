@@ -10,8 +10,16 @@ export default function AccountDropdown() {
     const buttonRef = useRef<HTMLButtonElement>(null);
 
     const { data: session, status } = useSession();
-    const userName = session?.user.name;
-    const userEmail = session?.user.email;
+
+    let userName = "Guest";
+    let userEmail = "guest@guest.com";
+
+    if (session?.user) {
+        userName = session.user.name ?? "Unnamed";
+        userEmail = session.user.email ?? "No Email";
+    }
+    // const userName = session?.user.name;
+    // const userEmail = session?.user.email;
 
     // close on click-out / Esc
     useEffect(() => {

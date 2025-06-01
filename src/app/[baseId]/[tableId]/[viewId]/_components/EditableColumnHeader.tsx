@@ -21,6 +21,8 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
 
     const inputRef = useRef<HTMLInputElement>(null);
 
+    const isGuest = typeof window !== "undefined" && document.cookie.includes("guest=guest_user");
+
     const utils = api.useUtils();
     const createColumn = api.column.createColumn.useMutation({
         onSuccess: () => utils.table.getTableData.invalidate(),
@@ -87,11 +89,13 @@ export default function EditableColumnHeader({ columnId, name, tableId, isAddCol
 
         console.log(type);
 
-        if (isAddColumn) {
-        // console.log(type);
-            createColumn.mutate({ name: input, type, tableId: Number(tableId) });
-        } else if (columnId && input != name) {
-            updateColumn.mutate({ columnId, name: input, tableId: Number(tableId) });
+        if (!isGuest) {
+            if (isAddColumn) {
+            // console.log(type);
+                createColumn.mutate({ name: input, type, tableId: Number(tableId) });
+            } else if (columnId && input != name) {
+                updateColumn.mutate({ columnId, name: input, tableId: Number(tableId) });
+            }
         }
     };
 
