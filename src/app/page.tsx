@@ -9,11 +9,14 @@ import { auth } from "~/server/auth";
 import { api, HydrateClient } from "~/trpc/server";
 
 import HomePage from "./HomePage";
+import { GuestNotice } from "./_components/GuestNotice";
 
 export default async function Home() {
     const session = await auth();
 
     console.log(session);
+
+    const isGuest = session?.user?.id === "guest_user" || session?.user?.isGuest;
 
     if (!session) {
         redirect("/login");
@@ -34,6 +37,7 @@ export default async function Home() {
     return (
         <HydrateClient>
             <main>
+                {isGuest && <GuestNotice />}
                 <HomePage bases={bases}/>
             </main>
         </HydrateClient>
