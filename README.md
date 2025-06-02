@@ -20,3 +20,8 @@ A fast, Airtable-inspired spreadsheet web app built with the [T3 Stack](https://
 * **Backend**: tRPC, Prisma, PostgreSQL
 * **Infra**: Vercel (hosting), Google OAuth
 * **Others**: TanStack Virtual, Zod, Faker.js
+
+## Screenshots
+![Log-in Page](https://github.com/user-attachments/assets/5b9bfcf3-93c3-49cb-824a-54dc21a8eb38)
+![Home Page](https://github.com/user-attachments/assets/895b13cb-ab95-4c67-b27d-43126a6a97f0)
+![Table Page](https://github.com/user-attachments/assets/066443dd-b4ce-480e-8ce8-6c988c4d843b)
