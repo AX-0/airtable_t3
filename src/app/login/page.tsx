@@ -19,7 +19,7 @@ export default function LoginPage() {
     }
 
     const handleGuestLogin = () => {
-        document.cookie = `guest=test; path=/; max-age=${60 * 30}`; // seconds * minutes, 30 minutes
+        document.cookie = `guest=guest_user; path=/; max-age=${60 * 30}`; // seconds * minutes, 30 minutes
         router.push("/");
     };
 

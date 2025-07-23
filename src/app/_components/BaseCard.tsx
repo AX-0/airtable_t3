@@ -18,6 +18,8 @@ export default function BaseCard({ base }: BaseCardProps) {
     const [showConfirm, setShowConfirm] = useState(false);
     const utils = api.useUtils();
 
+    const isGuest = typeof window !== "undefined" && document.cookie.includes("guest=guest_user");
+
     const getFirstTableView = api.base.getFirstTableAndView.useMutation();
     const deleteBase = api.base.deleteBase.useMutation({
         onSuccess: async () => {
@@ -64,6 +66,10 @@ export default function BaseCard({ base }: BaseCardProps) {
 
             <button
                 onClick={(e) => {
+                    if (isGuest) {
+                        return;
+                    }
+                    
                     e.stopPropagation();
                     setShowConfirm(true);
                 }}
